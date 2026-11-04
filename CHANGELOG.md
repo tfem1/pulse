@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- One-line installers: `curl … | sh` for Linux (`.deb` via apt, or a per-user
+  AppImage with a menu entry) and `irm … | iex` for Windows (per-user NSIS
+  setup). Both verify the SHA-256 digest of the download, and both support
+  `--version` and `--uninstall`.
+
+### Changed
+
+- Releases are published directly instead of as drafts, so the installers can
+  find them.
+
 ## [0.1.0] - 2026-11-04
 
 ### Added

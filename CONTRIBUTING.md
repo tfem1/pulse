@@ -74,5 +74,6 @@ just release 0.2.0
 
 This bumps the version in `package.json`, `Cargo.toml` and
 `tauri.conf.json`, commits, tags `v0.2.0` and pushes. The **Release** workflow
-then builds the installers and attaches them to a draft GitHub Release; review
-it, paste the CHANGELOG section and publish.
+then builds the installers and publishes them as a GitHub Release, which the
+one-line installers (`install.sh`, `install.ps1`) pick up immediately. Paste
+the CHANGELOG section into the release notes.

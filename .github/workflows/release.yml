@@ -54,6 +54,8 @@ jobs:
 
             **Linux:** `.deb` (Debian/Ubuntu) or `.AppImage` (any distribution — `chmod +x` it first).
             **Windows:** `.msi` or the `-setup.exe` installer.
-          releaseDraft: true
+          # Published (not draft) so the curl / PowerShell one-line installers,
+          # which use the GitHub `releases/latest` API, pick it up immediately.
+          releaseDraft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
           args: ${{ matrix.args }}

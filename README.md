@@ -96,7 +96,55 @@ choice with the OS setting.
 
 ## Install
 
-Download the latest installer from the
+### One-line install
+
+**Linux** (any x86_64 distribution):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tfem1/pulse/main/install.sh | sh
+```
+
+On Debian, Ubuntu and derivatives this installs the `.deb` package through
+`apt`, which pulls in the WebKitGTK dependencies and asks for your sudo
+password. Elsewhere, or without sudo, it installs the AppImage for your user
+only, in `~/.local/bin`, with a menu entry. You can choose the method yourself:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tfem1/pulse/main/install.sh | sh -s -- --appimage
+```
+
+**Windows** (PowerShell; installs for the current user, no administrator rights):
+
+```powershell
+irm https://raw.githubusercontent.com/tfem1/pulse/main/install.ps1 | iex
+```
+
+Both scripts download the latest release from GitHub and verify its SHA-256
+digest before installing anything. Options:
+
+|                  | Linux                            | Windows (PowerShell)                        |
+| ---------------- | -------------------------------- | ------------------------------------------- |
+| Specific version | `… \| sh -s -- --version v0.1.0` | `$env:PULSE_VERSION='v0.1.0'; irm … \| iex` |
+| Uninstall        | `… \| sh -s -- --uninstall`      | `$env:PULSE_UNINSTALL='1'; irm … \| iex`    |
+| Help             | `… \| sh -s -- --help`           | —                                           |
+
+Prefer to read a script before running it? Download it first, for example:
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/tfem1/pulse/main/install.sh
+```
+
+```bash
+less install.sh
+```
+
+```bash
+sh install.sh
+```
+
+### Manual download
+
+Download the installer for your system from the
 [Releases page](https://github.com/tfem1/pulse/releases).
 
 ### Linux
