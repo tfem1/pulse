@@ -35,7 +35,9 @@ jobs:
         run: |
           version=$(jq -r .version src-tauri/tauri.conf.json)
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          if gh release view "v$version" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft 2>/dev/null | grep -qx false; then
+          published=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            --jq "[.[] | select(.tag_name == \"v$version\" and .draft == false)] | length")
+          if [ "$published" -gt 0 ]; then
             echo "v$version is already published; nothing to do."
             echo "needed=false" >> "$GITHUB_OUTPUT"
           else
@@ -139,4 +141,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           ID: ${{ needs.create-release.outputs.id }}
         run: |
+          tag="v${{ needs.check.outputs.version }}"
+          # Another run (e.g. a manual one) may have published this version
+          # meanwhile: keep that release and discard our draft.
+          other=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            --jq "[.[] | select(.tag_name == \"$tag\" and .draft == false)] | length")
+          if [ "$other" -gt 0 ]; then
+            echo "$tag was already published by another run; removing the duplicate draft."
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$ID"
+            exit 0
+          fi
           gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$ID" -F draft=false -f make_latest=true --jq '.html_url'
