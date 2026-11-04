@@ -68,19 +68,19 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`,
 
 ## Releasing (maintainers)
 
-**From the browser:** open the repository's **Actions** tab, select the
-**Release** workflow, click **Run workflow** and choose the `main` branch. The
-release is named after the version in `src-tauri/tauri.conf.json` (for example
-`v0.1.0`), and its tag is created automatically.
-
-**From the command line:**
+Releases are automatic. Whenever `main` contains a version
+(`src-tauri/tauri.conf.json`) that has no published release yet, the
+**Release** workflow builds the Linux and Windows installers and publishes
+`v<version>`, tag included. To ship a new version:
 
 ```bash
 just release 0.2.0
 ```
 
-This bumps the version in `package.json`, `Cargo.toml` and
-`tauri.conf.json`, commits, tags `v0.2.0` and pushes. The **Release** workflow
-then builds the installers and publishes them as a GitHub Release, which the
-one-line installers (`install.sh`, `install.ps1`) pick up immediately. Paste
-the CHANGELOG section into the release notes.
+This bumps the version in `package.json`, `Cargo.toml` and `tauri.conf.json`,
+commits, and pushes to `main`. About 15 minutes later the release is live, and
+the one-line installers (`install.sh`, `install.ps1`) pick it up. Add the
+CHANGELOG section to the release notes if you like.
+
+Nothing is published unless both platforms build successfully: the release
+stays a draft until then, and a failed draft is replaced on the next run.

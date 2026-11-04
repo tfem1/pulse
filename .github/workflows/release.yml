@@ -1,19 +1,99 @@
 name: Release
 
+# Publishes a GitHub Release whenever `main` carries a version (from
+# src-tauri/tauri.conf.json) that has not been released yet. To release, bump
+# the version (`just release 0.2.0`) and push to main — nothing else.
+#
+# Flow: check → create a draft release → build Linux + Windows installers into
+# it → publish. The release only becomes visible (and the one-line installers
+# only see it) once every platform built successfully.
+
 on:
   push:
-    tags: ['v*']
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
-  release:
-    name: Bundle (${{ matrix.platform }})
+  check:
+    name: Is this version released?
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      needed: ${{ steps.v.outputs.needed }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(jq -r .version src-tauri/tauri.conf.json)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if gh release view "v$version" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft 2>/dev/null | grep -qx false; then
+            echo "v$version is already published; nothing to do."
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "v$version is not published yet; building it."
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  create-release:
+    name: Create draft release
+    needs: check
+    if: needs.check.outputs.needed == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      id: ${{ steps.create.outputs.id }}
+    steps:
+      - id: create
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          tag="v$VERSION"
+          # Remove a draft left over by an earlier failed run.
+          gh release delete "$tag" --repo "$GITHUB_REPOSITORY" --yes 2>/dev/null || true
+          notes=$(cat <<EOF
+          ## Install
+
+          **Linux** — open a terminal and run:
+
+          \`\`\`bash
+          curl -fsSL https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/install.sh | sh
+          \`\`\`
+
+          **Windows** — open PowerShell and run:
+
+          \`\`\`powershell
+          irm https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/install.ps1 | iex
+          \`\`\`
+
+          Or download the file for your system below: \`-setup.exe\` (Windows), \`.deb\` (Ubuntu / Debian / Mint), \`.AppImage\` (any Linux).
+
+          See [CHANGELOG.md](https://github.com/$GITHUB_REPOSITORY/blob/main/CHANGELOG.md) for what changed.
+          EOF
+          )
+          id=$(gh api -X POST "repos/$GITHUB_REPOSITORY/releases" \
+            -f tag_name="$tag" \
+            -f target_commitish="$GITHUB_SHA" \
+            -f name="Pulse $tag" \
+            -f body="$notes" \
+            -F draft=true \
+            --jq .id)
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build (${{ matrix.platform }})
+    needs: [check, create-release]
     runs-on: ${{ matrix.platform }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         include:
           # Older glibc => the AppImage/deb run on more distributions.
@@ -45,20 +125,18 @@ jobs:
 
       - uses: tauri-apps/tauri-action@v0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         with:
-          # __VERSION__ is replaced by tauri-action with the app version
-          # (tauri.conf.json), so a manual "Run workflow" from main also
-          # produces a correctly named release and creates its tag.
-          tagName: v__VERSION__
-          releaseName: Pulse v__VERSION__
-          releaseBody: |
-            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for what changed.
-
-            **Linux:** `.deb` (Debian/Ubuntu) or `.AppImage` (any distribution — `chmod +x` it first).
-            **Windows:** `.msi` or the `-setup.exe` installer.
-          # Published (not draft) so the curl / PowerShell one-line installers,
-          # which use the GitHub `releases/latest` API, pick it up immediately.
-          releaseDraft: false
-          prerelease: false
+          releaseId: ${{ needs.create-release.outputs.id }}
           args: ${{ matrix.args }}
+
+  publish:
+    name: Publish release
+    needs: [check, create-release, build]
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          ID: ${{ needs.create-release.outputs.id }}
+        run: |
+          gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$ID" -F draft=false -f make_latest=true --jq '.html_url'

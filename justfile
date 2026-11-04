@@ -55,14 +55,14 @@ format:
     cargo fmt --all
     npm run format
 
-# Bump the version everywhere, commit, tag and push (CI then builds the release)
+# Release a new version: bump it everywhere, commit and push to main.
+# GitHub then builds and publishes the release automatically (~15 min).
 release version:
     node scripts/bump-version.mjs {{version}}
     cargo update -p pulse -p pulse-core
     git add package.json package-lock.json Cargo.toml Cargo.lock src-tauri/tauri.conf.json
     git commit -m "chore: release v{{version}}"
-    git tag -a v{{version}} -m "Pulse v{{version}}"
-    git push origin HEAD --follow-tags
+    git push origin HEAD:main
 
 # Remove build artefacts
 clean:

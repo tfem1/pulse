@@ -88,9 +88,22 @@ function Install-Pulse {
     $release = Invoke-RestMethod -Uri $url -Headers $Headers
   } catch {
     if ($Version -eq 'latest') {
-      throw "No published release found for $Repo yet. See https://github.com/$Repo/releases"
+      foreach ($state in 'in_progress', 'queued') {
+        try {
+          $runs = Invoke-RestMethod -Uri "$Api/actions/workflows/release.yml/runs?status=$state&per_page=1" -Headers $Headers
+          if ($runs.total_count -gt 0) {
+            Write-Step 'Pulse is being built on GitHub right now.'
+            Write-Note 'This takes about 15 minutes. Run the same command again then.'
+            Write-Note "Progress: https://github.com/$Repo/actions/workflows/release.yml"
+            return
+          }
+        } catch {
+          Write-Verbose 'Could not query the build status.'
+        }
+      }
+      throw "No version of Pulse is available to download yet. See https://github.com/$Repo/releases"
     }
-    throw "Release $Version not found. See https://github.com/$Repo/releases"
+    throw "Version $Version not found. Available versions: https://github.com/$Repo/releases"
   }
 
   # Prefer the NSIS setup (per-user, no admin); fall back to the MSI.

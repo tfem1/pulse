@@ -15,8 +15,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
-- Releases are published directly instead of as drafts, so the installers can
-  find them.
+- Releases are automatic: pushing a new version to `main` builds and publishes
+  it. No tag or manual step is needed, and a release only goes public once every
+  platform built successfully.
+- The installers explain that a release is being built, instead of failing,
+  when one is in progress.
 
 ## [0.1.0] - 2026-11-04
 

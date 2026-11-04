@@ -157,11 +157,28 @@ else
 fi
 
 info "Looking up the ${VERSION} release of $REPO"
+# True while GitHub is building a new release of Pulse.
+release_building() {
+  for state in in_progress queued; do
+    if fetch "$API/actions/workflows/release.yml/runs?status=$state&per_page=1" 2>/dev/null |
+      grep -q '"total_count": *[1-9]'; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 RELEASE_JSON="$(fetch "$RELEASE_URL" 2>/dev/null)" || {
   if [ "$VERSION" = latest ]; then
-    die "no published release found for $REPO yet. See https://github.com/$REPO/releases"
+    if release_building; then
+      info "Pulse is being built on GitHub right now."
+      note "This takes about 15 minutes. Run the same command again then."
+      note "Progress: https://github.com/$REPO/actions/workflows/release.yml"
+      exit 1
+    fi
+    die "no version of Pulse is available to download yet. See https://github.com/$REPO/releases"
   fi
-  die "release $VERSION not found. See https://github.com/$REPO/releases"
+  die "version $VERSION not found. Available versions: https://github.com/$REPO/releases"
 }
 TAG="$(printf '%s\n' "$RELEASE_JSON" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -n 1)"
 ASSETS="$(printf '%s\n' "$RELEASE_JSON" | list_assets)"
