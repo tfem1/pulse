@@ -33,9 +33,9 @@
     "category": "Utility",
     "shortDescription": "Fast, monochrome system monitor",
     "longDescription": "Pulse is a cross-platform system monitor for Linux and Windows: live CPU, memory, disk, network, GPU and sensor metrics, a full process manager, alert rules with desktop notifications and CSV/JSON export.",
-    "copyright": "Copyright (c) 2026 OWNER. MIT License.",
+    "copyright": "Copyright (c) 2026 tfem1. MIT License.",
     "license": "MIT",
-    "homepage": "https://github.com/OWNER/pulse",
+    "homepage": "https://github.com/tfem1/pulse",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

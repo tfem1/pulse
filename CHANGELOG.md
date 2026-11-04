@@ -39,5 +39,5 @@ All notable changes to this project are documented here. The format follows
 - CI for Linux and Windows; tag-triggered release workflow producing `.deb`,
   `.AppImage`, `.msi` and `.exe` installers.
 
-[Unreleased]: https://github.com/OWNER/pulse/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/OWNER/pulse/releases/tag/v0.1.0
+[Unreleased]: https://github.com/tfem1/pulse/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/tfem1/pulse/releases/tag/v0.1.0

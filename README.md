@@ -6,8 +6,8 @@
 
 **A fast, monochrome system monitor for Linux and Windows.**
 
-[![Build](https://github.com/OWNER/pulse/actions/workflows/build.yml/badge.svg)](https://github.com/OWNER/pulse/actions/workflows/build.yml)
-[![Release](https://img.shields.io/github/v/release/OWNER/pulse?include_prereleases&color=555)](https://github.com/OWNER/pulse/releases)
+[![Build](https://github.com/tfem1/pulse/actions/workflows/build.yml/badge.svg)](https://github.com/tfem1/pulse/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/tfem1/pulse?include_prereleases&color=555)](https://github.com/tfem1/pulse/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-555)](LICENSE)
 ![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20Windows-555)
 ![Built with](https://img.shields.io/badge/built%20with-Rust%20%C2%B7%20Tauri%202%20%C2%B7%20React-555)
@@ -97,7 +97,7 @@ choice with the OS setting.
 ## Install
 
 Download the latest installer from the
-[Releases page](https://github.com/OWNER/pulse/releases).
+[Releases page](https://github.com/tfem1/pulse/releases).
 
 ### Linux
 
@@ -150,7 +150,7 @@ Prerequisites:
 Then:
 
 ```bash
-git clone https://github.com/OWNER/pulse.git
+git clone https://github.com/tfem1/pulse.git
 ```
 
 ```bash

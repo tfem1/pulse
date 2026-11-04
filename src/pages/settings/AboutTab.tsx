@@ -13,7 +13,7 @@ import { toast } from '@/stores/toast';
 import { SettingRow, SettingsSection } from './SettingRow';
 
 /** Single place to change the repository coordinates. */
-export const REPO = 'OWNER/pulse';
+export const REPO = 'tfem1/pulse';
 const REPO_URL = `https://github.com/${REPO}`;
 
 const LICENSES: [string, string][] = [
