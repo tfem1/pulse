@@ -9,14 +9,20 @@ if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(version ?? '')) {
   process.exit(1);
 }
 
-const json = (path, mutate) => {
-  const data = JSON.parse(readFileSync(path, 'utf8'));
-  mutate(data);
-  writeFileSync(path, JSON.stringify(data, null, 2) + '\n');
+// Replace only the top-level "version" value so the files keep their
+// existing (Prettier) formatting.
+const setJsonVersion = (path) => {
+  const text = readFileSync(path, 'utf8');
+  const next = text.replace(/^(\s{2}"version":\s*")[^"]*(")/m, `$1${version}$2`);
+  if (next === text && !text.includes(`"version": "${version}"`)) {
+    console.error(`could not find a top-level "version" in ${path}`);
+    process.exit(1);
+  }
+  writeFileSync(path, next);
 };
 
-json('package.json', (p) => (p.version = version));
-json('src-tauri/tauri.conf.json', (c) => (c.version = version));
+setJsonVersion('package.json');
+setJsonVersion('src-tauri/tauri.conf.json');
 
 const cargo = readFileSync('Cargo.toml', 'utf8');
 const next = cargo.replace(/(\[workspace\.package\][^[]*?\nversion = ")[^"]+(")/, `$1${version}$2`);

@@ -59,6 +59,7 @@ format:
 # GitHub then builds and publishes the release automatically (~15 min).
 release version:
     node scripts/bump-version.mjs {{version}}
+    npm install --package-lock-only --ignore-scripts
     cargo update -p pulse -p pulse-core
     git add package.json package-lock.json Cargo.toml Cargo.lock src-tauri/tauri.conf.json
     git commit -m "chore: release v{{version}}"
