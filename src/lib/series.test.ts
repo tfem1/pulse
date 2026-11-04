@@ -48,3 +48,36 @@ describe('SeriesBank', () => {
     expect(s.latest('v')).toBe(9);
   });
 });
+
+describe('SeriesBank memory hygiene', () => {
+  it('drops a series that has been absent for a whole buffer', () => {
+    const b = new SeriesBank(3);
+    b.push(0, { eth0: 1, tun0: 5 });
+    b.push(1000, { eth0: 2 });
+    b.push(2000, { eth0: 3 });
+    expect(b.has('tun0')).toBe(true); // still has a value in the window
+    b.push(3000, { eth0: 4 });
+    expect(b.has('tun0')).toBe(false);
+    expect(b.keys()).toEqual(['eth0']);
+  });
+
+  it('keeps a series that comes back before expiring', () => {
+    const b = new SeriesBank(3);
+    b.push(0, { sda: 1 });
+    b.push(1000, {});
+    b.push(2000, { sda: 2 });
+    b.push(3000, {});
+    b.push(4000, {});
+    expect(b.has('sda')).toBe(true);
+    expect(b.tail('sda', 3).map((v) => (Number.isNaN(v) ? null : v))).toEqual([2, null, null]);
+  });
+
+  it('stores values with enough precision for charts', () => {
+    const b = new SeriesBank(2);
+    const bytes = 12_345_678_901; // 11.5 GiB
+    b.push(1_700_000_000_123, { mem: bytes, cpu: 42.42 });
+    expect(Math.abs(b.latest('mem')! - bytes) / bytes).toBeLessThan(1e-6);
+    expect(b.latest('cpu')!).toBeCloseTo(42.42, 4);
+    expect(b.lastTime()).toBe(1_700_000_000_123); // timestamps stay exact
+  });
+});

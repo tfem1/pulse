@@ -6,6 +6,31 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Leaving the Processes page (or the dashboard) while it was still starting
+  could leave a process listener registered and backend process streaming
+  switched on, refreshing the whole process table every second with nobody
+  watching. Covered by new tests.
+- The alert listener could be registered twice when the app's start-up
+  effect re-ran (React StrictMode).
+
+### Changed
+
+- Lower memory over long sessions:
+  - the last process list is freed when no view needs it (also in the tray);
+  - chart series for disks, interfaces or sensors that disappeared are
+    released, and chart values use 32-bit floats (half the memory);
+  - the caches of interface names and suspended PIDs are pruned.
+- Charts and sparklines share one theme-palette observer instead of one per
+  instance.
+- Removed unused code and dependencies: the slider and separator components,
+  `@radix-ui/react-slider`, `@radix-ui/react-separator`,
+  `@tauri-apps/plugin-notification` (JS side; notifications are sent from
+  Rust), `serde_json` and `thiserror` from the app crate, `parking_lot` from
+  `pulse-core`, and Tauri's unused `image-png` feature. The release binary is
+  136 KB smaller.
+
 ## [0.1.1] - 2026-11-04
 
 ### Fixed

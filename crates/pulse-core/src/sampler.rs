@@ -345,6 +345,11 @@ impl Sampler {
                 .keys()
                 .map(|k| k.to_string_lossy().into_owned())
                 .collect();
+            if refresh_lists {
+                // Forget interfaces that disappeared (container veths, VPN
+                // tunnels...) so the cache cannot grow without bound.
+                self.virtual_cache.retain(|k, _| names.contains(k));
+            }
             let virt: HashMap<String, bool> = names
                 .iter()
                 .map(|n| (n.clone(), self.is_virtual(n)))

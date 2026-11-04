@@ -87,6 +87,7 @@ export function ProcessTable({
   onToggle,
   actions,
   totalMemory,
+  loading = false,
 }: {
   rows: Row[];
   selected: number | null;
@@ -97,6 +98,8 @@ export function ProcessTable({
   onToggle: (pid: number) => void;
   actions: RowActions;
   totalMemory: number;
+  /** No process list received yet. */
+  loading?: boolean;
 }) {
   const t = useT();
   const density = useAppearance((s) => s.density);
@@ -344,7 +347,9 @@ export function ProcessTable({
         })}
       </div>
       {rows.length === 0 && (
-        <p className="absolute inset-x-0 top-24 text-center text-sm text-muted">{t('process.noMatch')}</p>
+        <p className="absolute inset-x-0 top-24 text-center text-sm text-muted">
+          {loading ? t('common.loading') : t('process.noMatch')}
+        </p>
       )}
     </div>
   );

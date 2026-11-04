@@ -153,8 +153,3 @@ export function resolveTheme(
   if (choice === 'system') return prefersDark ? systemDark : systemLight;
   return choice;
 }
-
-/** Read the current value of a CSS custom property (e.g. "--chart-1"). */
-export function cssVar(name: string, el: Element = document.documentElement): string {
-  return getComputedStyle(el).getPropertyValue(name).trim();
-}

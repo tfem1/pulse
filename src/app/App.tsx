@@ -37,6 +37,7 @@ export function App() {
 
   useEffect(() => {
     let off: (() => void) | undefined;
+    let disposed = false;
     (async () => {
       const api = await getBackend();
       const cfg = await useConfig.getState().load();
@@ -46,8 +47,12 @@ export function App() {
         useAlerts.getState().push(e);
         if (e.kind === 'fired') toast.warning(e.ruleName);
       });
+      if (disposed) off();
     })().catch((e) => setError(errorMessage(e)));
-    return () => off?.();
+    return () => {
+      disposed = true;
+      off?.();
+    };
   }, []);
 
   // Keep the chart buffers sized to the configured history window.

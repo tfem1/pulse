@@ -67,6 +67,7 @@ export function ProcessesPage() {
   const t = useT();
   const cfg = useConfig((s) => s.config?.processes);
   const processes = useProcesses((s) => s.processes);
+  const loaded = useProcesses((s) => s.updatedAt !== null);
   const start = useProcesses((s) => s.start);
   const stop = useProcesses((s) => s.stop);
   const totalMemory = useMetrics((s) => s.snapshot?.memory.total ?? 0);
@@ -266,6 +267,7 @@ export function ProcessesPage() {
         }
         actions={actions}
         totalMemory={totalMemory}
+        loading={!loaded}
       />
       <p className="mt-2 text-xs text-faint">{t('processes.keyboardHint')}</p>
 

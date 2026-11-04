@@ -4,15 +4,24 @@
  * Every series in a bank shares the bank's time axis, so any subset can be
  * handed to uPlot as `AlignedData`. Missing values are stored as NaN and
  * emitted as `null` (a gap in the line).
+ *
+ * Memory: timestamps are Float64 (epoch milliseconds need it), values are
+ * Float32 (~7 significant digits, plenty for a chart) — half the size. A
+ * series that received no value for a whole buffer (unplugged disk, removed
+ * network interface…) is dropped instead of being kept forever.
  */
 
 export class Ring {
-  private buf: Float64Array;
+  private buf: Float64Array | Float32Array;
   private head = 0;
   private count = 0;
 
-  constructor(readonly capacity: number) {
-    this.buf = new Float64Array(Math.max(1, capacity));
+  constructor(
+    readonly capacity: number,
+    precision: 'f64' | 'f32' = 'f64',
+  ) {
+    const n = Math.max(1, capacity);
+    this.buf = precision === 'f32' ? new Float32Array(n) : new Float64Array(n);
   }
 
   push(v: number): void {
@@ -50,6 +59,8 @@ export type AlignedData = [number[], ...(number | null)[][]];
 export class SeriesBank {
   private time: Ring;
   private series = new Map<string, Ring>();
+  /** Consecutive samples without a value, per series. */
+  private missing = new Map<string, number>();
 
   constructor(readonly capacity: number) {
     this.time = new Ring(capacity);
@@ -77,15 +88,25 @@ export class SeriesBank {
     for (const [key, v] of Object.entries(values)) {
       let ring = this.series.get(key);
       if (!ring) {
-        ring = new Ring(this.capacity);
+        ring = new Ring(this.capacity, 'f32');
         // Pad so the new series stays aligned with the time axis.
         for (let i = 0; i < this.time.length - 1; i++) ring.push(Number.NaN);
         this.series.set(key, ring);
       }
       ring.push(v == null || !Number.isFinite(v) ? Number.NaN : v);
+      this.missing.delete(key);
     }
     for (const [key, ring] of this.series) {
-      if (!(key in values)) ring.push(Number.NaN);
+      if (key in values) continue;
+      ring.push(Number.NaN);
+      const gone = (this.missing.get(key) ?? 0) + 1;
+      if (gone >= this.capacity) {
+        // Nothing left to draw for this series: free it.
+        this.series.delete(key);
+        this.missing.delete(key);
+      } else {
+        this.missing.set(key, gone);
+      }
     }
   }
 

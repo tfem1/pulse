@@ -143,8 +143,24 @@ pub fn spawn(app: AppHandle, shared: Arc<Shared>) {
                         let _ = app.emit(EVENT_PROCESSES, p.as_ref());
                     }
                 }
-                if let Some(p) = procs {
-                    *shared.processes.write() = p;
+                match procs {
+                    Some(p) => {
+                        // Forget suspended PIDs whose process has exited.
+                        let mut suspended = shared.suspended.lock();
+                        if !suspended.is_empty() {
+                            suspended.retain(|pid| p.iter().any(|x| x.pid == *pid));
+                        }
+                        drop(suspended);
+                        *shared.processes.write() = p;
+                    }
+                    // Nobody is watching the process table: don't keep the
+                    // last full list (hundreds of entries with command
+                    // lines) in memory, e.g. while Pulse sits in the tray.
+                    None => {
+                        if !shared.processes.read().is_empty() {
+                            *shared.processes.write() = Arc::new(Vec::new());
+                        }
+                    }
                 }
 
                 // Tray text changes are cheap but not free: every 2 s.
