@@ -91,14 +91,17 @@ need_root() {
 }
 
 # Print "name<TAB>sha256<TAB>url" for every asset of a GitHub release JSON
-# document (pretty-printed, one field per line). No jq required.
+# document. Works whether the JSON is compact (what api.github.com returns)
+# or pretty-printed: each relevant key is first moved onto its own line.
+# No jq required; portable to gawk, mawk and busybox awk.
 list_assets() {
-  awk '
-    /"name":/                 { n = $0; sub(/.*"name": *"/, "", n); sub(/".*/, "", n); d = "" }
-    /"digest":/               { d = $0; sub(/.*"digest": *"(sha256:)?/, "", d); sub(/".*/, "", d) }
-    /"browser_download_url":/ { u = $0; sub(/.*"browser_download_url": *"/, "", u); sub(/".*/, "", u)
-                                printf "%s\t%s\t%s\n", n, d, u }
-  '
+  awk '{ gsub(/"(name|digest|browser_download_url)": */, "\n&"); print }' |
+    awk '
+      /^"name":/                 { n = $0; sub(/^"name": *"/, "", n); sub(/".*/, "", n); d = "" }
+      /^"digest":/               { d = $0; sub(/^"digest": *"/, "", d); sub(/^sha256:/, "", d); sub(/".*/, "", d) }
+      /^"browser_download_url":/ { u = $0; sub(/^"browser_download_url": *"/, "", u); sub(/".*/, "", u)
+                                   printf "%s\t%s\t%s\n", n, d, u }
+    '
 }
 
 sha256_of() {
@@ -184,8 +187,8 @@ TAG="$(printf '%s\n' "$RELEASE_JSON" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1
 ASSETS="$(printf '%s\n' "$RELEASE_JSON" | list_assets)"
 
 case "$METHOD" in
-  deb) PATTERN='_amd64\.deb$' ;;
-  appimage) PATTERN='_amd64\.AppImage$' ;;
+  deb) PATTERN='_amd64[.]deb$' ;;
+  appimage) PATTERN='_amd64[.]AppImage$' ;;
 esac
 ASSET="$(printf '%s\n' "$ASSETS" | awk -F '\t' -v p="$PATTERN" '$1 ~ p { print; exit }')"
 [ -n "$ASSET" ] || die "release $TAG has no $METHOD package for x86_64. See https://github.com/$REPO/releases/tag/$TAG"
