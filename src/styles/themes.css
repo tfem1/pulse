@@ -1,0 +1,260 @@
+/*
+ * Pulse theme tokens — strictly monochrome.
+ *
+ * Every colour below is a pure grey (R = G = B). State is never conveyed by
+ * hue: success / warning / danger differ in lightness and are always paired
+ * with a distinct icon shape (circle / triangle / octagon) and, for danger,
+ * a heavier stroke or hatched fill. `src/theme/themes.test.ts` enforces the
+ * greyscale rule and the WCAG contrast targets for every theme.
+ *
+ * Token reference
+ *   --bg, --bg-elevated            app background, sidebar / top bar
+ *   --surface, --surface-hover     cards, rows, inputs
+ *   --border, --border-strong      hairlines, emphasised outlines
+ *   --text, --text-muted, --text-faint
+ *   --accent, --on-accent          primary actions (a grey) and text on it
+ *   --chart-1 … --chart-5          five distinguishable chart greys
+ *   --chart-grid                   chart grid lines
+ *   --success, --warning, --danger status greys
+ *   --focus                        focus ring colour
+ *   --border-width, --ring-width, --ring-offset, --chart-stroke
+ */
+
+:root,
+[data-theme='obsidian'] {
+  color-scheme: dark;
+  --bg: #0f0f0f;
+  --bg-elevated: #151515;
+  --surface: #1c1c1c;
+  --surface-hover: #262626;
+  --border: #2e2e2e;
+  --border-strong: #4a4a4a;
+  --text: #ededed;
+  --text-muted: #a3a3a3;
+  --text-faint: #6e6e6e;
+  --accent: #d4d4d4;
+  --on-accent: #0f0f0f;
+  --chart-1: #f2f2f2;
+  --chart-2: #c4c4c4;
+  --chart-3: #9a9a9a;
+  --chart-4: #7d7d7d;
+  --chart-5: #6b6b6b;
+  --chart-grid: #262626;
+  --success: #8a8a8a;
+  --warning: #c4c4c4;
+  --danger: #ffffff;
+  --focus: #ffffff;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.6), 0 8px 24px rgb(0 0 0 / 0.4);
+  --border-width: 1px;
+  --ring-width: 2px;
+  --ring-offset: 2px;
+  --chart-stroke: 1.5;
+}
+
+[data-theme='graphite'] {
+  color-scheme: dark;
+  --bg: #1e1e1e;
+  --bg-elevated: #242424;
+  --surface: #2a2a2a;
+  --surface-hover: #333333;
+  --border: #3a3a3a;
+  --border-strong: #555555;
+  --text: #e0e0e0;
+  --text-muted: #a6a6a6;
+  --text-faint: #7a7a7a;
+  --accent: #c2c2c2;
+  --on-accent: #1e1e1e;
+  --chart-1: #ececec;
+  --chart-2: #c9c9c9;
+  --chart-3: #a8a8a8;
+  --chart-4: #8c8c8c;
+  --chart-5: #767676;
+  --chart-grid: #363636;
+  --success: #949494;
+  --warning: #c9c9c9;
+  --danger: #f5f5f5;
+  --focus: #f0f0f0;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 8px 24px rgb(0 0 0 / 0.3);
+  --border-width: 1px;
+  --ring-width: 2px;
+  --ring-offset: 2px;
+  --chart-stroke: 1.5;
+}
+
+[data-theme='slate'] {
+  color-scheme: dark;
+  --bg: #202020;
+  --bg-elevated: #2b2b2b;
+  --surface: #313131;
+  --surface-hover: #3b3b3b;
+  --border: #454545;
+  --border-strong: #5e5e5e;
+  --text: #f2f2f2;
+  --text-muted: #b3b3b3;
+  --text-faint: #858585;
+  --accent: #e0e0e0;
+  --on-accent: #202020;
+  --chart-1: #f5f5f5;
+  --chart-2: #d0d0d0;
+  --chart-3: #adadad;
+  --chart-4: #929292;
+  --chart-5: #7c7c7c;
+  --chart-grid: #404040;
+  --success: #9c9c9c;
+  --warning: #d0d0d0;
+  --danger: #ffffff;
+  --focus: #ffffff;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.45), 0 10px 28px rgb(0 0 0 / 0.3);
+  --border-width: 1px;
+  --ring-width: 2px;
+  --ring-offset: 2px;
+  --chart-stroke: 1.5;
+}
+
+[data-theme='paper'] {
+  color-scheme: light;
+  --bg: #f6f6f6;
+  --bg-elevated: #ececec;
+  --surface: #ffffff;
+  --surface-hover: #f0f0f0;
+  --border: #dddddd;
+  --border-strong: #b5b5b5;
+  --text: #141414;
+  --text-muted: #525252;
+  --text-faint: #808080;
+  --accent: #2b2b2b;
+  --on-accent: #fafafa;
+  --chart-1: #111111;
+  --chart-2: #3d3d3d;
+  --chart-3: #5e5e5e;
+  --chart-4: #777777;
+  --chart-5: #8f8f8f;
+  --chart-grid: #ebebeb;
+  --success: #6b6b6b;
+  --warning: #3d3d3d;
+  --danger: #000000;
+  --focus: #000000;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 8px 24px rgb(0 0 0 / 0.06);
+  --border-width: 1px;
+  --ring-width: 2px;
+  --ring-offset: 2px;
+  --chart-stroke: 1.5;
+}
+
+[data-theme='fog'] {
+  color-scheme: light;
+  --bg: #e4e4e4;
+  --bg-elevated: #dbdbdb;
+  --surface: #eaeaea;
+  --surface-hover: #dfdfdf;
+  --border: #d0d0d0;
+  --border-strong: #b0b0b0;
+  --text: #3d3d3d;
+  --text-muted: #5e5e5e;
+  --text-faint: #7b7b7b;
+  --accent: #4a4a4a;
+  --on-accent: #eeeeee;
+  --chart-1: #2a2a2a;
+  --chart-2: #474747;
+  --chart-3: #5f5f5f;
+  --chart-4: #737373;
+  --chart-5: #858585;
+  --chart-grid: #dadada;
+  --success: #6b6b6b;
+  --warning: #474747;
+  --danger: #1a1a1a;
+  --focus: #2a2a2a;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 6px 18px rgb(0 0 0 / 0.05);
+  --border-width: 1px;
+  --ring-width: 2px;
+  --ring-offset: 2px;
+  --chart-stroke: 1.5;
+}
+
+[data-theme='carbon'] {
+  color-scheme: dark;
+  --bg: #000000;
+  --bg-elevated: #000000;
+  --surface: #0d0d0d;
+  --surface-hover: #1a1a1a;
+  --border: #262626;
+  --border-strong: #4d4d4d;
+  --text: #ffffff;
+  --text-muted: #b8b8b8;
+  --text-faint: #7a7a7a;
+  --accent: #ffffff;
+  --on-accent: #000000;
+  --chart-1: #ffffff;
+  --chart-2: #cfcfcf;
+  --chart-3: #a3a3a3;
+  --chart-4: #7f7f7f;
+  --chart-5: #636363;
+  --chart-grid: #1f1f1f;
+  --success: #8f8f8f;
+  --warning: #cfcfcf;
+  --danger: #ffffff;
+  --focus: #ffffff;
+  --shadow: none;
+  --border-width: 1px;
+  --ring-width: 2px;
+  --ring-offset: 2px;
+  --chart-stroke: 1.5;
+}
+
+[data-theme='high-contrast'] {
+  color-scheme: dark;
+  --bg: #000000;
+  --bg-elevated: #000000;
+  --surface: #000000;
+  --surface-hover: #1f1f1f;
+  --border: #ffffff;
+  --border-strong: #ffffff;
+  --text: #ffffff;
+  --text-muted: #e6e6e6;
+  --text-faint: #c7c7c7;
+  --accent: #ffffff;
+  --on-accent: #000000;
+  --chart-1: #ffffff;
+  --chart-2: #d9d9d9;
+  --chart-3: #b3b3b3;
+  --chart-4: #8c8c8c;
+  --chart-5: #737373;
+  --chart-grid: #4d4d4d;
+  --success: #b3b3b3;
+  --warning: #e6e6e6;
+  --danger: #ffffff;
+  --focus: #ffffff;
+  --shadow: none;
+  --border-width: 2px;
+  --ring-width: 4px;
+  --ring-offset: 3px;
+  --chart-stroke: 2.5;
+}
+
+/* Accent intensity (Appearance → Accent). Each option stays a grey. */
+[data-accent='soft'] {
+  --accent: var(--text-muted);
+  --on-accent: var(--bg);
+}
+
+[data-accent='strong'] {
+  --accent: var(--text);
+  --on-accent: var(--bg);
+}
+
+/* Density (Appearance → Density). */
+:root {
+  --row-h: 34px;
+  --card-pad: 1rem;
+  --page-pad: 1.5rem;
+  --gap: 1rem;
+  --font-size: 14px;
+}
+
+[data-density='compact'] {
+  --row-h: 26px;
+  --card-pad: 0.75rem;
+  --page-pad: 1rem;
+  --gap: 0.625rem;
+  --font-size: 13px;
+}

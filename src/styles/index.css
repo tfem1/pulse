@@ -1,0 +1,133 @@
+@import './themes.css';
+@import 'uplot/dist/uPlot.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-size: var(--font-size);
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family:
+      Inter,
+      'Segoe UI Variable',
+      'Segoe UI',
+      system-ui,
+      -apple-system,
+      Ubuntu,
+      Cantarell,
+      'Noto Sans',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  * {
+    border-color: var(--border);
+  }
+
+  /* Selectable content (command lines, paths, values). */
+  .selectable,
+  input,
+  textarea,
+  pre,
+  code {
+    user-select: text;
+  }
+
+  /* One focus treatment for every interactive element, in every theme. */
+  :focus-visible {
+    outline: var(--ring-width) solid var(--focus);
+    outline-offset: var(--ring-offset);
+    border-radius: 6px;
+  }
+
+  ::selection {
+    background: var(--text);
+    color: var(--bg);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 8px;
+    border: 2px solid var(--bg);
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+
+  /* Hatched fill used for the "danger" state of meters: shape, not hue. */
+  .hatched {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      var(--danger) 0 4px,
+      color-mix(in srgb, var(--danger) 45%, transparent) 4px 8px
+    );
+  }
+
+  .skip-link {
+    position: absolute;
+    left: 0.5rem;
+    top: -3rem;
+    z-index: 100;
+    padding: 0.5rem 0.75rem;
+    background: var(--accent);
+    color: var(--on-accent);
+    border-radius: 6px;
+  }
+  .skip-link:focus {
+    top: 0.5rem;
+  }
+}
+
+/* uPlot: legend and cursor follow the theme. */
+.uplot {
+  font-family: inherit;
+}
+.u-legend {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+.u-legend .u-marker {
+  border-radius: 2px;
+}
+.u-select {
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+}
+.u-cursor-x,
+.u-cursor-y {
+  border-color: var(--border-strong) !important;
+}
