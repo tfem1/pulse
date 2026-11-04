@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-04
+
+### Fixed
+
+- Storage: **Find largest folders** now starts the scan immediately, shows
+  "Scanning…" on the button and scrolls to the results. Before, it only filled
+  in the path, so nothing seemed to happen.
+- Storage: **Up** computed wrong parent folders for Windows drive and UNC paths
+  (`C:\Users` went to `C:` instead of `C:\`).
+- A newer scan can no longer be overwritten by the result of an older, slower
+  one.
+- Linux installer: read GitHub's compact JSON (no package was found) and
+  silence gawk's escape-sequence warning.
+
 ### Added
 
 - One-line installers: `curl … | sh` for Linux (`.deb` via apt, or a per-user
@@ -54,5 +68,6 @@ All notable changes to this project are documented here. The format follows
 - CI for Linux and Windows; tag-triggered release workflow producing `.deb`,
   `.AppImage`, `.msi` and `.exe` installers.
 
-[Unreleased]: https://github.com/tfem1/pulse/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/tfem1/pulse/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/tfem1/pulse/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/tfem1/pulse/releases/tag/v0.1.0

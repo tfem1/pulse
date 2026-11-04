@@ -269,6 +269,8 @@ export const fr: Record<TKey, string> = {
   'storage.path': 'Dossier à analyser',
   'storage.up': 'Parent',
   'storage.scan': 'Analyser',
+  'storage.scanning': 'Analyse…',
+  'storage.scanningHint': 'Analyse de {path}… Un grand disque peut prendre jusqu’à 20 secondes.',
   'storage.scanFailed': 'Échec de l’analyse',
   'storage.scanSummary': '{size} dans {items} éléments · {ms} ms',
   'storage.scanErrors': '{count} illisibles',

@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Pulse",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "identifier": "dev.pulse.app",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -29,7 +29,12 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["deb", "appimage", "msi", "nsis"],
+    "targets": [
+      "deb",
+      "appimage",
+      "msi",
+      "nsis"
+    ],
     "category": "Utility",
     "shortDescription": "Fast, monochrome system monitor",
     "longDescription": "Pulse is a cross-platform system monitor for Linux and Windows: live CPU, memory, disk, network, GPU and sensor metrics, a full process manager, alert rules with desktop notifications and CSV/JSON export.",
@@ -45,11 +50,15 @@
     ],
     "linux": {
       "deb": {
-        "depends": ["libayatana-appindicator3-1"]
+        "depends": [
+          "libayatana-appindicator3-1"
+        ]
       }
     },
     "windows": {
-      "webviewInstallMode": { "type": "downloadBootstrapper" }
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
     }
   }
 }

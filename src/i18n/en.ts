@@ -280,6 +280,8 @@ export const en = {
   'storage.path': 'Folder to scan',
   'storage.up': 'Up',
   'storage.scan': 'Scan',
+  'storage.scanning': 'Scanning…',
+  'storage.scanningHint': 'Scanning {path}… Large drives can take up to 20 seconds.',
   'storage.scanFailed': 'Scan failed',
   'storage.scanSummary': '{size} in {items} items · {ms} ms',
   'storage.scanErrors': '{count} unreadable',

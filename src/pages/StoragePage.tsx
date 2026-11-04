@@ -1,5 +1,5 @@
 import { ArrowUp, Folder, FolderOpen, FolderSearch, HardDrive, Loader2, Usb } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState, type RefObject } from 'react';
 import { TimeSeriesChart } from '@/components/charts/TimeSeriesChart';
 import { RangeSelector, type RangeSec } from '@/components/charts/RangeSelector';
 import { Meter } from '@/components/Meter';
@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { StatusIcon } from '@/components/StatusIcon';
 import { levelFor } from '@/lib/levels';
 import { Unavailable } from '@/components/Unavailable';
+import { useDirectoryScan } from '@/hooks/useDirectoryScan';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,21 +15,27 @@ import { Input } from '@/components/ui/input';
 import { useT } from '@/i18n';
 import { backend } from '@/lib/api';
 import { formatBytes, formatNumber, formatPercent, formatRate } from '@/lib/format';
-import type { DiskSnapshot, ScanResult } from '@/lib/types';
+import { parentPath } from '@/lib/paths';
+import type { DiskSnapshot } from '@/lib/types';
 import { cn, percent } from '@/lib/utils';
 import { K, useMetrics } from '@/stores/metrics';
-import { toast } from '@/stores/toast';
 
 function PartitionCard({
   d,
   selected,
   onSelect,
   onScan,
+  scanning,
+  busy,
 }: {
   d: DiskSnapshot;
   selected: boolean;
   onSelect: () => void;
   onScan: () => void;
+  /** This drive is being scanned. */
+  scanning: boolean;
+  /** Any scan is running. */
+  busy: boolean;
 }) {
   const t = useT();
   const used = d.total - d.available;
@@ -81,43 +88,25 @@ function PartitionCard({
           <p className="font-medium">{formatRate(d.writeBps)}</p>
         </div>
       </div>
-      <Button variant="outline" size="sm" onClick={onScan} className="mt-auto">
-        <FolderSearch /> {t('storage.findLargest')}
+      <Button variant="outline" size="sm" onClick={onScan} disabled={busy} className="mt-auto">
+        {scanning ? <Loader2 className="animate-spin" /> : <FolderSearch />}
+        {scanning ? t('storage.scanning') : t('storage.findLargest')}
       </Button>
     </Card>
   );
 }
 
-function SpaceScanner({ initialPath }: { initialPath: string }) {
+type Scanner = ReturnType<typeof useDirectoryScan>;
+
+function SpaceScanner({ scanner, cardRef }: { scanner: Scanner; cardRef: RefObject<HTMLDivElement | null> }) {
   const t = useT();
-  const [path, setPath] = useState(initialPath);
-  const [result, setResult] = useState<ScanResult | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const scan = async (p = path) => {
-    if (!p.trim()) return;
-    setLoading(true);
-    setPath(p);
-    try {
-      setResult(await backend().scanDirectory(p.trim()));
-    } catch (e) {
-      toast.error(t('storage.scanFailed'), e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const parent = (p: string) => {
-    const trimmed = p.replace(/[\\/]+$/, '');
-    const i = Math.max(trimmed.lastIndexOf('/'), trimmed.lastIndexOf('\\'));
-    if (i <= 0) return trimmed.includes('\\') ? trimmed.slice(0, 3) : '/';
-    return trimmed.slice(0, i) || '/';
-  };
+  const { path, setPath, result, scanning, scan } = scanner;
+  const loading = scanning !== null;
 
   const max = result?.entries[0]?.size ?? 1;
 
   return (
-    <Card>
+    <Card ref={cardRef} className="scroll-mt-4">
       <CardHeader>
         <div>
           <CardTitle>{t('storage.topConsumers')}</CardTitle>
@@ -129,7 +118,7 @@ function SpaceScanner({ initialPath }: { initialPath: string }) {
           className="flex flex-wrap gap-2"
           onSubmit={(e) => {
             e.preventDefault();
-            void scan();
+            void scan(path);
           }}
         >
           <Input
@@ -152,7 +141,7 @@ function SpaceScanner({ initialPath }: { initialPath: string }) {
             type="button"
             variant="secondary"
             disabled={!result || loading}
-            onClick={() => result && scan(parent(result.path))}
+            onClick={() => result && scan(parentPath(result.path))}
           >
             <ArrowUp /> {t('storage.up')}
           </Button>
@@ -161,8 +150,15 @@ function SpaceScanner({ initialPath }: { initialPath: string }) {
           </Button>
         </form>
 
+        {loading && (
+          <p role="status" className="flex items-center gap-2 text-sm text-muted">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {t('storage.scanningHint', { path: scanning })}
+          </p>
+        )}
+
         {result && (
-          <>
+          <div className={cn('space-y-4', loading && 'opacity-50')}>
             <p className="num text-xs text-muted">
               {t('storage.scanSummary', {
                 size: formatBytes(result.totalSize),
@@ -203,7 +199,7 @@ function SpaceScanner({ initialPath }: { initialPath: string }) {
                 </li>
               ))}
             </ul>
-          </>
+          </div>
         )}
       </CardContent>
     </Card>
@@ -215,7 +211,18 @@ export function StoragePage() {
   const disks = useMetrics((s) => s.snapshot?.disks);
   const [selected, setSelected] = useState<string | null>(null);
   const [range, setRange] = useState<RangeSec>(60);
-  const [scanPath, setScanPath] = useState<string | null>(null);
+  const scanner = useDirectoryScan(disks?.[0]?.mountPoint ?? '/');
+  const scannerRef = useRef<HTMLDivElement>(null);
+
+  const scanDrive = async (mount: string) => {
+    const reveal = () => scannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    reveal(); // show the "Scanning…" status right away
+    await scanner.scan(mount);
+    // Wait until React has rendered the results (two frames), then scroll:
+    // only then is the page tall enough to bring them into view.
+    await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+    reveal();
+  };
 
   const current = disks?.find((d) => d.mountPoint === selected) ?? disks?.[0];
   const series = current
@@ -259,7 +266,9 @@ export function StoragePage() {
             d={d}
             selected={current?.mountPoint === d.mountPoint}
             onSelect={() => setSelected(d.mountPoint)}
-            onScan={() => setScanPath(d.mountPoint)}
+            onScan={() => void scanDrive(d.mountPoint)}
+            scanning={scanner.scanning === d.mountPoint}
+            busy={scanner.scanning !== null}
           />
         ))}
       </div>
@@ -283,7 +292,7 @@ export function StoragePage() {
         </Card>
       )}
 
-      <SpaceScanner key={scanPath ?? 'default'} initialPath={scanPath ?? current?.mountPoint ?? '/'} />
+      <SpaceScanner scanner={scanner} cardRef={scannerRef} />
     </div>
   );
 }
