@@ -213,7 +213,12 @@ EXEC="\"$APP_FILE\""
 if ! { ldconfig -p 2>/dev/null || /sbin/ldconfig -p 2>/dev/null; } | grep -q 'libfuse\.so\.2'; then
   EXEC="env APPIMAGE_EXTRACT_AND_RUN=1 \"$APP_FILE\""
   note "libfuse2 not found: Pulse will run in extract-and-run mode."
-  note "For faster start-up install it (Debian/Ubuntu: sudo apt install libfuse2t64 or libfuse2)."
+  if have pacman; then FUSE_CMD="sudo pacman -S fuse2"
+  elif have apt-get; then FUSE_CMD="sudo apt install libfuse2t64   (older releases: libfuse2)"
+  elif have dnf; then FUSE_CMD="sudo dnf install fuse-libs"
+  elif have zypper; then FUSE_CMD="sudo zypper install libfuse2"
+  else FUSE_CMD="install your distribution's libfuse2 / fuse2 package"; fi
+  note "For faster start-up: $FUSE_CMD"
 fi
 
 cat >"$DESKTOP_FILE" <<EOF
