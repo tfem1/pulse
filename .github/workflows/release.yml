@@ -47,8 +47,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: Pulse ${{ github.ref_name }}
+          # __VERSION__ is replaced by tauri-action with the app version
+          # (tauri.conf.json), so a manual "Run workflow" from main also
+          # produces a correctly named release and creates its tag.
+          tagName: v__VERSION__
+          releaseName: Pulse v__VERSION__
           releaseBody: |
             See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for what changed.
 
@@ -57,5 +60,5 @@ jobs:
           # Published (not draft) so the curl / PowerShell one-line installers,
           # which use the GitHub `releases/latest` API, pick it up immediately.
           releaseDraft: false
-          prerelease: ${{ contains(github.ref_name, '-') }}
+          prerelease: false
           args: ${{ matrix.args }}

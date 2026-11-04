@@ -68,6 +68,13 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`,
 
 ## Releasing (maintainers)
 
+**From the browser:** open the repository's **Actions** tab, select the
+**Release** workflow, click **Run workflow** and choose the `main` branch. The
+release is named after the version in `src-tauri/tauri.conf.json` (for example
+`v0.1.0`), and its tag is created automatically.
+
+**From the command line:**
+
 ```bash
 just release 0.2.0
 ```
