@@ -4,198 +4,157 @@
 
 # Pulse
 
-**A fast, monochrome system monitor for Linux and Windows.**
+**See what your computer is doing, and fix it when it slows down.**
 
-[![Build](https://github.com/tfem1/pulse/actions/workflows/build.yml/badge.svg)](https://github.com/tfem1/pulse/actions/workflows/build.yml)
-[![Release](https://img.shields.io/github/v/release/tfem1/pulse?include_prereleases&color=555)](https://github.com/tfem1/pulse/releases)
-[![License: MIT](https://img.shields.io/badge/license-MIT-555)](LICENSE)
-![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20Windows-555)
-![Built with](https://img.shields.io/badge/built%20with-Rust%20%C2%B7%20Tauri%202%20%C2%B7%20React-555)
+Free · Linux and Windows · No ads, no account, no data collection
+
+[Français](README.fr.md) · [Download](#install) · [Releases](https://github.com/tfem1/pulse/releases)
 
 ![Pulse dashboard](docs/screenshots/dashboard.png)
 
 </div>
 
-Pulse aims to beat Windows Task Manager and match GNOME System Monitor and htop.
-It has a modern, keyboard-friendly interface and runs from a single
-Rust + Tauri codebase. It is a native app with a small binary that uses the
-system webview, has no telemetry, and makes no network calls unless you opt in.
+## What is Pulse for?
 
-## Features
+Pulse is a **system monitor**: an app that shows, live, how your computer is
+using its resources. It's like the Windows Task Manager, but clearer, more
+complete, and it works on Linux too.
 
-- **Dashboard** — CPU, memory, disk, network, GPU and system cards with
-  sparklines, a live CPU/memory chart and the top processes.
-- **Performance** — tabs for CPU (per core, frequencies, load average), Memory
-  (composition, cache, commit, swap), Disk, Network and GPU. Each tab has a
-  rolling chart over 60 s, 5 min or 15 min.
-- **Process manager**:
-  - a virtualised table that stays smooth with thousands of rows, with sort,
-    instant search (`/`) and a **tree view**;
-  - a greyscale CPU, memory and disk heat-map;
-  - **End task** (graceful), **Force kill**, **Suspend / Resume** and
-    **Priority**, with confirmation dialogs and precise permission errors;
-  - full keyboard control (↑ ↓ · Enter · Del · Shift+Del) and a context menu.
-- **Storage** — per-partition usage and live read/write speeds, plus a bounded
-  **top space consumers** scanner you can drill into.
-- **Network** — per-interface throughput, addresses, link speed, MTU and error
-  counters, TCP connection states and listening sockets (with the owning PID
-  on Windows).
-- **Sensors** — temperatures, fans, voltages, power and current, with
-  session min/max, critical thresholds and trends.
-- **Alerts** — rules on CPU, memory, swap, disk space, I/O, network, GPU and
-  temperatures, with a minimum duration and cooldown. They are evaluated in the
-  backend even when the window is hidden, and send **desktop notifications**,
-  respecting quiet hours.
-- **Tray icon** — live CPU, memory and network figures; close-to-tray; Quit.
-- **Export** — the full metrics history to **CSV** or **JSON**.
-- **Seven monochrome themes**, a follow-system mode, accent intensity,
-  comfortable or compact density, and an **English / French** UI.
-- **Accessible** — visible focus rings in every theme, a skip link, ARIA
-  roles, and status conveyed by shape rather than colour.
+Use it when:
 
-### Why it beats Task Manager
+- **Your computer is slow.** Pulse shows which program is using the processor
+  or the memory, and you can close it in one click.
+- **Your disk is full.** Pulse shows how much space is left and finds the
+  folders that take up the most room.
+- **Your computer is hot or the fan is loud.** Pulse shows temperatures and
+  fan speeds.
+- **Your internet seems slow.** Pulse shows how much each network connection
+  is downloading and uploading right now.
+- **You want to be warned.** Pulse can send you a notification, for example
+  when memory is almost full or the processor stays at 100% for too long.
+  This keeps working when the window is closed.
 
-|                                     | Task Manager         | Pulse                                               |
-| ----------------------------------- | -------------------- | --------------------------------------------------- |
-| Linux support                       | ✗                    | ✓                                                   |
-| Process tree view                   | ✗ (grouped only)     | ✓                                                   |
-| Suspend / resume a process          | ✗                    | ✓                                                   |
-| Alert rules with notifications      | ✗                    | ✓                                                   |
-| Export metrics (CSV/JSON)           | ✗                    | ✓                                                   |
-| Selectable history window           | 60 s fixed           | 60 s / 5 min / 15 min (up to 60 min of history)     |
-| Temperatures, fans, voltages        | GPU temperature only | All sensors exposed by hwmon / LibreHardwareMonitor |
-| Open sockets / listening ports      | ✗ (Resource Monitor) | ✓                                                   |
-| Largest folders on a disk           | ✗                    | ✓                                                   |
-| Shows its own CPU & memory overhead | ✗                    | ✓                                                   |
+## Install
+
+### Linux
+
+1. Open a **Terminal** (search for "Terminal" in your applications menu).
+2. Paste this command and press <kbd>Enter</kbd>:
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/tfem1/pulse/main/install.sh | sh
+   ```
+
+3. If your password is requested, type it (nothing appears as you type, which
+   is normal) and press <kbd>Enter</kbd>.
+
+Pulse is now in your applications menu.
+
+### Windows
+
+1. Open **PowerShell**: right-click the Start button, then choose
+   _Terminal_ or _Windows PowerShell_.
+2. Paste this command and press <kbd>Enter</kbd>:
+
+   ```powershell
+   irm https://raw.githubusercontent.com/tfem1/pulse/main/install.ps1 | iex
+   ```
+
+Pulse is now in the Start menu. No administrator rights are needed.
+
+### Prefer a classic installer?
+
+Download the file for your system from the
+[Releases page](https://github.com/tfem1/pulse/releases):
+
+- **Windows:** the file ending in `-setup.exe`
+- **Ubuntu, Debian, Mint:** the `.deb` file (double-click it)
+- **Other Linux:** the `.AppImage` file (right-click → Properties → allow
+  executing, then double-click)
+
+### Uninstall
+
+- **Linux:**
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/tfem1/pulse/main/install.sh | sh -s -- --uninstall
+  ```
+
+- **Windows:** _Settings → Apps → Pulse → Uninstall_.
+
+## What you'll find in Pulse
+
+| Page            | What it shows                                                                                    |
+| --------------- | ------------------------------------------------------------------------------------------------ |
+| **Dashboard**   | Everything at a glance: processor, memory, disk, network, graphics card.                         |
+| **Performance** | Detailed graphs for the last minute, 5 minutes or 15 minutes.                                    |
+| **Processes**   | Every running program, with how much it uses. Search, sort, close, pause or slow down a program. |
+| **Storage**     | Space used on each disk, and the biggest folders.                                                |
+| **Network**     | Download and upload speed of each connection.                                                    |
+| **Sensors**     | Temperatures, fan speeds and voltages.                                                           |
+| **Alerts**      | Your warning rules, for example "notify me if memory goes above 90%".                            |
+| **Settings**    | Theme, language (English / French), refresh speed, notifications, data export.                   |
+
+**A few tips:**
+
+- In **Processes**, click a program, then **End task** to close it. **Force
+  kill** closes a program that is frozen. Right-click a program for more
+  options.
+- Click the **Pause** button in the top bar to freeze the graphs and read
+  them at your own pace.
+- When you close the window, Pulse keeps running in the corner of the
+  taskbar (the tray), so your alerts keep working. To quit completely,
+  right-click its icon there and choose **Quit Pulse**.
+- Keyboard shortcuts: <kbd>Ctrl</kbd>+<kbd>1</kbd> to <kbd>8</kbd> switch
+  between pages, and <kbd>/</kbd> searches the process list.
 
 ## Screenshots
 
 | Processes                                    | Performance                                                      |
 | -------------------------------------------- | ---------------------------------------------------------------- |
 | ![Processes](docs/screenshots/processes.png) | ![Performance](docs/screenshots/performance.png)                 |
-| **Storage**                                  | **Settings → Appearance**                                        |
+| **Storage**                                  | **Appearance settings**                                          |
 | ![Storage](docs/screenshots/storage.png)     | ![Appearance settings](docs/screenshots/settings-appearance.png) |
 
-> These screenshots were taken with the browser demo backend (`npm run dev`),
-> so the values are synthetic.
+Pulse comes in **seven black-and-white themes**, dark and light, including a
+high-contrast theme for low vision. By default it follows your system's
+dark or light mode.
 
-## Themes
+| Obsidian                              | Graphite                              | Slate                                           | Paper                           |
+| ------------------------------------- | ------------------------------------- | ----------------------------------------------- | ------------------------------- |
+| ![Obsidian](docs/themes/obsidian.png) | ![Graphite](docs/themes/graphite.png) | ![Slate](docs/themes/slate.png)                 | ![Paper](docs/themes/paper.png) |
+| **Fog**                               | **Carbon**                            | **High Contrast**                               |                                 |
+| ![Fog](docs/themes/fog.png)           | ![Carbon](docs/themes/carbon.png)     | ![High Contrast](docs/themes/high-contrast.png) |                                 |
 
-Every theme is strictly greyscale: all colours have R = G = B, which the test
-suite enforces. State is conveyed by lightness, stroke weight, pattern and
-shape — never by hue.
+## Common questions
 
-|                                                                                                                                       |                                                                                    |                                                                           |
-| ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| ![Obsidian](docs/themes/obsidian.png)<br>**Obsidian** — near-black, light grey text (default dark)                                    | ![Graphite](docs/themes/graphite.png)<br>**Graphite** — dark grey, softer contrast | ![Slate](docs/themes/slate.png)<br>**Slate** — cooler, lifted surfaces    |
-| ![Paper](docs/themes/paper.png)<br>**Paper** — off-white, near-black text (light)                                                     | ![Fog](docs/themes/fog.png)<br>**Fog** — light grey, low contrast                  | ![Carbon](docs/themes/carbon.png)<br>**Carbon** — OLED black, crisp white |
-| ![High Contrast](docs/themes/high-contrast.png)<br>**High Contrast** — pure black and white, 2 px borders, 4 px focus rings, WCAG AAA |                                                                                    |                                                                           |
+**Why can't I close some programs?**
+Programs that belong to the system or to another user are protected. To
+manage them, start Pulse as administrator (Windows) or with `sudo pulse`
+(Linux). Pulse tells you clearly when this is the case.
 
-Choose **Follow system** to switch between a dark and a light theme of your
-choice with the OS setting.
+**Why don't I see temperatures on Windows?**
+Windows doesn't share them with ordinary apps. Install the free
+[LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor),
+start it as administrator, and Pulse shows its readings automatically.
 
-## Install
+**Does Pulse slow down my computer?**
+No. When it runs in the background it uses less than 1% of one processor core
+and about 100 MB of memory.
 
-### One-line install
+**Does Pulse send my data anywhere?**
+No. Pulse doesn't connect to the internet at all. The only exception is the
+"check for updates" button in _Settings → About_, which is off by default.
 
-**Linux** (any x86_64 distribution):
+**I don't see the Pulse icon near the clock (Linux).**
+Some desktops, such as GNOME (default on Ubuntu), need the _AppIndicator_
+extension to show tray icons. Without it, Pulse still works normally; closing
+the window simply quits the app.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/tfem1/pulse/main/install.sh | sh
-```
+## For developers
 
-On Debian, Ubuntu and derivatives this installs the `.deb` package through
-`apt`, which pulls in the WebKitGTK dependencies and asks for your sudo
-password. Elsewhere, or without sudo, it installs the AppImage for your user
-only, in `~/.local/bin`, with a menu entry. You can choose the method yourself:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/tfem1/pulse/main/install.sh | sh -s -- --appimage
-```
-
-**Windows** (PowerShell; installs for the current user, no administrator rights):
-
-```powershell
-irm https://raw.githubusercontent.com/tfem1/pulse/main/install.ps1 | iex
-```
-
-Both scripts download the latest release from GitHub and verify its SHA-256
-digest before installing anything. Options:
-
-|                  | Linux                            | Windows (PowerShell)                        |
-| ---------------- | -------------------------------- | ------------------------------------------- |
-| Specific version | `… \| sh -s -- --version v0.1.0` | `$env:PULSE_VERSION='v0.1.0'; irm … \| iex` |
-| Uninstall        | `… \| sh -s -- --uninstall`      | `$env:PULSE_UNINSTALL='1'; irm … \| iex`    |
-| Help             | `… \| sh -s -- --help`           | —                                           |
-
-Prefer to read a script before running it? Download it first, for example:
-
-```bash
-curl -fsSLO https://raw.githubusercontent.com/tfem1/pulse/main/install.sh
-```
-
-```bash
-less install.sh
-```
-
-```bash
-sh install.sh
-```
-
-### Manual download
-
-Download the installer for your system from the
-[Releases page](https://github.com/tfem1/pulse/releases).
-
-### Linux
-
-- **Debian / Ubuntu** — install the `.deb`:
-
-  ```bash
-  sudo apt install ./Pulse_*_amd64.deb
-  ```
-
-- **Any distribution** — use the AppImage:
-
-  ```bash
-  chmod +x Pulse_*_amd64.AppImage
-  ./Pulse_*_amd64.AppImage
-  ```
-
-The tray icon needs an AppIndicator / StatusNotifier host. KDE, Cinnamon and
-Xfce include one; on GNOME install the _AppIndicator and KStatusNotifierItem
-Support_ extension. Without a host, Pulse still runs, and closing the window
-quits it.
-
-To manage other users' processes, raise priorities or read some sensors, run
-Pulse with elevated rights (for example `sudo -E pulse`), or grant
-`CAP_SYS_NICE` / `CAP_KILL` to the binary.
-
-### Windows
-
-Run the `.msi` or `Pulse_*_x64-setup.exe` installer. Windows 10 and 11 already
-include WebView2; the installer downloads it otherwise.
-
-Windows does not expose temperatures, fans or voltages to regular
-applications. Install and run [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor)
-(as administrator) and Pulse reads its sensors automatically. Without it, Pulse
-falls back to ACPI thermal zones, which also need administrator rights.
-
-## Build from source
-
-Prerequisites:
-
-- Rust stable 1.82 or newer ([rustup](https://rustup.rs))
-- Node.js 20 or newer
-- **Linux:**
-
-  ```bash
-  sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
-  ```
-
-- **Windows:** [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and WebView2.
-
-Then:
+Pulse is built with Rust and [Tauri 2](https://tauri.app) for the system
+part, and React with TypeScript for the interface.
 
 ```bash
 git clone https://github.com/tfem1/pulse.git
@@ -209,73 +168,15 @@ cd pulse
 npm ci
 ```
 
-Run in development mode with hot reload:
-
 ```bash
 npm run tauri dev
 ```
 
-Build the installers for your OS into `target/release/bundle/`:
-
-```bash
-npm run tauri build
-```
-
-With [`just`](https://github.com/casey/just) installed you can use the shortcuts
-`just dev`, `just build`, `just test`, `just lint`, `just format` and
-`just release <version>`.
-
-## Architecture
-
-```
-React UI (webview) ──invoke──▶ Tauri commands ──▶ pulse-core (platform layer, alerts, export)
-       ▲                                                     ▲
-       └──── pulse://snapshot events ◀── sampler thread ─────┘  (sysinfo · NVML · hwmon · WMI)
-```
-
-- **`crates/pulse-core`** — a Tauri-free engine with the typed models, sampler,
-  history ring buffer, alert engine, CSV/JSON export, directory scanner and a
-  platform abstraction layer behind `#[cfg(target_os)]`
-  (`platform/linux.rs`, `platform/windows.rs`). It is unit-tested, and its
-  Windows code is type-checked from Linux in CI.
-- **`src-tauri`** — the desktop shell: IPC commands, the background sampler
-  thread, the tray, notifications and close-to-tray.
-- **`src`** — the React UI:
-  - routing with react-router, one page per section, and nested routes for the
-    settings tabs;
-  - Zustand stores;
-  - uPlot charts updated imperatively, so a tick never re-renders a chart;
-  - shadcn/ui components on Tailwind, themed entirely through CSS custom
-    properties.
-
-The data flow, the platform layer, routing and the theme token system are
-documented in **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
-
-## Performance
-
-Measured on a 4-core VM (Linux, release build, 1 s refresh):
-
-- **Closed to the tray** — sampling, alert evaluation and tray updates cost
-  **0.16 % of one core** and **107 MB** in total (PSS). The webview is destroyed
-  while hidden and re-created instantly from the tray.
-- **Window open on the dashboard** — the Rust engine uses about 1 % of one core.
-  The webview's cost depends on your GPU; it was 7 % of one core in a VM with no
-  GPU and software rendering, the worst case.
-
-Details and methodology: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#keeping-idle-cost-low).
-
-## Privacy
-
-Pulse has no telemetry, no analytics and no crash reporting. The only network
-request it can make is the optional update check (Settings → About), which is
-**off by default** and only queries the GitHub Releases API when you click
-_Check now_.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
-Changes are tracked in [CHANGELOG.md](CHANGELOG.md).
+- [CONTRIBUTING.md](CONTRIBUTING.md): system prerequisites, tests, code
+  rules, and how to publish a release.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how the app works inside.
+- [CHANGELOG.md](CHANGELOG.md): history of changes.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE): free to use, modify and share.
