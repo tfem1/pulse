@@ -11,6 +11,7 @@ import type {
   AppPaths,
   Config,
   ConnectionSummary,
+  EndAppOutcome,
   DiskSnapshot,
   ExportFormat,
   GpuSnapshot,
@@ -109,36 +110,43 @@ export function defaultConfig(): Config {
   };
 }
 
-const PROC_NAMES = [
-  ['systemd', 'root', true],
-  ['kthreadd', 'root', true],
-  ['Xwayland', 'demo', false],
-  ['gnome-shell', 'demo', false],
-  ['pipewire', 'demo', false],
-  ['firefox', 'demo', false],
-  ['Web Content', 'demo', false],
-  ['Web Content', 'demo', false],
-  ['code', 'demo', false],
-  ['rust-analyzer', 'demo', false],
-  ['cargo', 'demo', false],
-  ['node', 'demo', false],
-  ['postgres', 'postgres', true],
-  ['dockerd', 'root', true],
-  ['containerd', 'root', true],
-  ['sshd', 'root', true],
-  ['NetworkManager', 'root', true],
-  ['pulse', 'demo', false],
-  ['spotify', 'demo', false],
-  ['slack', 'demo', false],
-  ['bash', 'demo', false],
-  ['zsh', 'demo', false],
-  ['htop', 'demo', false],
-  ['journald', 'root', true],
-  ['udisksd', 'root', true],
-  ['cupsd', 'root', true],
-  ['thunderbird', 'demo', false],
-  ['obsidian', 'demo', false],
-] as const;
+/**
+ * Demo process tree: [name, user, system, parent index, window title (app), exe override].
+ * A title marks a user-facing app (what the backend reports as `gui`).
+ */
+type DemoProc = [string, string, boolean, number | null, string | null, string?];
+const FIREFOX = '/usr/lib/firefox/firefox';
+const CODE = '/usr/share/code/code';
+const PROC_NAMES: DemoProc[] = [
+  ['systemd', 'root', true, null, null], // 0
+  ['kthreadd', 'root', true, null, null], // 1
+  ['gnome-shell', 'demo', false, 0, null], // 2 (desktop shell: not an app)
+  ['Xwayland', 'demo', false, 2, null], // 3
+  ['pipewire', 'demo', false, 0, null], // 4
+  ['firefox', 'demo', false, 2, 'Pulse – GitHub — Mozilla Firefox', FIREFOX], // 5
+  ['Web Content', 'demo', false, 5, null, FIREFOX], // 6
+  ['Web Content', 'demo', false, 5, null, FIREFOX], // 7
+  ['code', 'demo', false, 2, 'pulse — Visual Studio Code', CODE], // 8
+  ['rust-analyzer', 'demo', false, 8, null], // 9
+  ['cargo', 'demo', false, 8, null], // 10
+  ['node', 'demo', false, 8, null], // 11
+  ['postgres', 'postgres', true, 0, null], // 12
+  ['dockerd', 'root', true, 0, null], // 13
+  ['containerd', 'root', true, 0, null], // 14
+  ['sshd', 'root', true, 0, null], // 15
+  ['NetworkManager', 'root', true, 0, null], // 16
+  ['pulse', 'demo', false, 2, null], // 17 (Pulse itself is never listed as an app)
+  ['spotify', 'demo', false, 2, 'Spotify Premium'], // 18
+  ['slack', 'demo', false, 2, 'general — Slack'], // 19
+  ['gnome-terminal-server', 'demo', false, 0, 'Terminal'], // 20
+  ['bash', 'demo', false, 20, null], // 21
+  ['htop', 'demo', false, 21, null], // 22
+  ['journald', 'root', true, 0, null], // 23
+  ['udisksd', 'root', true, 0, null], // 24
+  ['cupsd', 'root', true, 0, null], // 25
+  ['thunderbird', 'demo', false, 2, 'Inbox — Mozilla Thunderbird'], // 26
+  ['obsidian', 'demo', false, 2, 'Notes — Obsidian'], // 27
+];
 
 export class DemoBackend implements Backend {
   readonly isDemo = true;
@@ -160,9 +168,10 @@ export class DemoBackend implements Backend {
   private totals = { rx: 48 * GiB, tx: 6 * GiB, read: 120 * GiB, written: 80 * GiB };
 
   constructor() {
-    this.procs = PROC_NAMES.map(([name, user, sys], i) => ({
-      pid: i < 2 ? i + 1 : 400 + i * 37,
-      parent: i < 2 ? (i === 0 ? null : 0) : i % 5 === 0 ? 1 : 400 + Math.max(2, i - 3) * 37,
+    const pidOf = (i: number) => (i < 2 ? i + 1 : 400 + i * 37);
+    this.procs = PROC_NAMES.map(([name, user, sys, parent, title, exe], i) => ({
+      pid: pidOf(i),
+      parent: parent == null ? null : pidOf(parent),
       name,
       user,
       cpu: Math.random() * (name.includes('Web') || name === 'firefox' ? 8 : 2),
@@ -173,10 +182,12 @@ export class DemoBackend implements Backend {
       status: 'sleeping',
       startTime: Math.floor(this.started / 1000) - Math.floor(Math.random() * 86400),
       runTime: Math.floor(Math.random() * 86400),
-      cmd: `/usr/bin/${name.toLowerCase().replace(/\s/g, '-')} --demo`,
-      exe: `/usr/bin/${name.toLowerCase().replace(/\s/g, '-')}`,
+      cmd: `${exe ?? `/usr/bin/${name.toLowerCase().replace(/\s/g, '-')}`} --demo`,
+      exe: exe ?? `/usr/bin/${name.toLowerCase().replace(/\s/g, '-')}`,
       threads: 1 + Math.floor(Math.random() * 40),
       isSystem: sys,
+      gui: title != null,
+      title,
     }));
     // Seed 3 minutes of history so charts are populated immediately.
     const now = Date.now();
@@ -483,6 +494,25 @@ export class DemoBackend implements Backend {
   async killProcess(pid: number) {
     this.find(pid);
     this.procs = this.procs.filter((p) => p.pid !== pid);
+  }
+  async endApp(pids: number[], _primary: number[], force: boolean): Promise<EndAppOutcome> {
+    // Slack plays an app that ignores the close request.
+    const stubborn = !force && this.procs.some((p) => pids.includes(p.pid) && p.name === 'slack');
+    await new Promise((r) => setTimeout(r, force ? 150 : stubborn ? 2000 : 700));
+    const failed = pids.filter((pid) => this.procs.find((p) => p.pid === pid)?.user === 'root');
+    if (failed.length === pids.length)
+      throw {
+        kind: 'permissionDenied',
+        message:
+          'cannot end this app: it belongs to another user. Run Pulse as root (e.g. with sudo) to manage it.',
+      };
+    this.procs = this.procs.filter((p) => !pids.includes(p.pid) || failed.includes(p.pid));
+    return {
+      ended: failed.length === 0,
+      forced: force ? pids.length : stubborn ? pids.length : 0,
+      failed,
+      error: failed.length ? 'some processes belong to another user' : null,
+    };
   }
   async suspendProcess(pid: number) {
     this.find(pid).status = 'suspended';

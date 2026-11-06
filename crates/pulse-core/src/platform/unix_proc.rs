@@ -96,6 +96,28 @@ pub fn get_nice(pid: u32) -> Result<i32> {
     Ok(v)
 }
 
+pub fn request_close(pid: u32) -> Result<bool> {
+    send(pid, libc::SIGTERM, "close").map(|()| true)
+}
+
+#[cfg(target_os = "linux")]
+pub fn is_running(pid: u32) -> bool {
+    // State is the first field after the command name; Z / X = exited.
+    match std::fs::read_to_string(format!("/proc/{pid}/stat")) {
+        Ok(stat) => stat
+            .rfind(')')
+            .and_then(|i| stat[i + 1..].split_whitespace().next())
+            .is_some_and(|state| state != "Z" && state != "X"),
+        Err(_) => false,
+    }
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn is_running(pid: u32) -> bool {
+    // SAFETY: kill(2) with signal 0 only checks for existence.
+    unsafe { libc::kill(pid as libc::pid_t, 0) == 0 }
+}
+
 pub fn get_priority(pid: u32) -> Result<Priority> {
     get_nice(pid).map(Priority::from_nice)
 }

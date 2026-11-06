@@ -21,14 +21,17 @@ use windows::Win32::System::Diagnostics::ToolHelp::{
 };
 use windows::Win32::System::ProcessStatus::{GetPerformanceInfo, PERFORMANCE_INFORMATION};
 use windows::Win32::System::Threading::{
-    GetCurrentProcess, GetPriorityClass, OpenProcess, OpenProcessToken, OpenThread, ResumeThread,
-    SetPriorityClass, SuspendThread, TerminateProcess, ABOVE_NORMAL_PRIORITY_CLASS,
-    BELOW_NORMAL_PRIORITY_CLASS, HIGH_PRIORITY_CLASS, IDLE_PRIORITY_CLASS, NORMAL_PRIORITY_CLASS,
-    PROCESS_ACCESS_RIGHTS, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_SET_INFORMATION,
-    PROCESS_TERMINATE, REALTIME_PRIORITY_CLASS, THREAD_SUSPEND_RESUME,
+    GetCurrentProcess, GetExitCodeProcess, GetPriorityClass, OpenProcess, OpenProcessToken,
+    OpenThread, ResumeThread, SetPriorityClass, SuspendThread, TerminateProcess,
+    ABOVE_NORMAL_PRIORITY_CLASS, BELOW_NORMAL_PRIORITY_CLASS, HIGH_PRIORITY_CLASS,
+    IDLE_PRIORITY_CLASS, NORMAL_PRIORITY_CLASS, PROCESS_ACCESS_RIGHTS,
+    PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_SET_INFORMATION, PROCESS_TERMINATE,
+    REALTIME_PRIORITY_CLASS, THREAD_SUSPEND_RESUME,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
-    EnumWindows, GetWindowThreadProcessId, IsWindowVisible, PostMessageW, WM_CLOSE,
+    EnumWindows, GetWindow, GetWindowLongPtrW, GetWindowTextLengthW, GetWindowTextW,
+    GetWindowThreadProcessId, IsWindowVisible, PostMessageW, GWL_EXSTYLE, GW_OWNER, WM_CLOSE,
+    WS_EX_TOOLWINDOW,
 };
 use wmi::WMIConnection;
 
@@ -97,20 +100,77 @@ unsafe extern "system" fn post_close(hwnd: HWND, lparam: LPARAM) -> BOOL {
     BOOL::from(true)
 }
 
+/// Post `WM_CLOSE` to every visible top-level window of `pid`; returns how
+/// many windows were asked to close.
+fn post_close_to_windows(pid: u32) -> u32 {
+    let mut search = CloseSearch { pid, posted: 0 };
+    // SAFETY: the callback only dereferences `search`, which outlives the call.
+    let _ = unsafe { EnumWindows(Some(post_close), LPARAM(&mut search as *mut _ as isize)) };
+    search.posted
+}
+
 /// Graceful: ask every visible top-level window to close (like `taskkill`
 /// without `/F`). Processes without windows are terminated.
 pub fn kill_process(pid: u32, force: bool) -> Result<()> {
-    if !force {
-        let mut search = CloseSearch { pid, posted: 0 };
-        // SAFETY: the callback only dereferences `search`, which outlives the call.
-        let _ = unsafe { EnumWindows(Some(post_close), LPARAM(&mut search as *mut _ as isize)) };
-        if search.posted > 0 {
-            return Ok(());
-        }
+    if !force && post_close_to_windows(pid) > 0 {
+        return Ok(());
     }
     let h = open_process(pid, PROCESS_TERMINATE, "end")?;
     // SAFETY: valid handle with PROCESS_TERMINATE access.
     unsafe { TerminateProcess(h.0, 1) }.map_err(|e| win_err(e, "end", pid))
+}
+
+/// Close request only (never terminates): `WM_CLOSE` to the process's windows.
+pub fn request_close(pid: u32) -> Result<bool> {
+    Ok(post_close_to_windows(pid) > 0)
+}
+
+pub fn is_running(pid: u32) -> bool {
+    const STILL_ACTIVE: u32 = 259;
+    let Ok(h) = open_process(pid, PROCESS_QUERY_LIMITED_INFORMATION, "query") else {
+        return false;
+    };
+    let mut code = 0u32;
+    // SAFETY: valid handle with query access; `code` is a valid out pointer.
+    unsafe { GetExitCodeProcess(h.0, &mut code) }.is_ok() && code == STILL_ACTIVE
+}
+
+unsafe extern "system" fn collect_title(hwnd: HWND, lparam: LPARAM) -> BOOL {
+    // SAFETY: lparam is the address of a live HashMap for the duration of
+    // the EnumWindows call.
+    let titles = unsafe { &mut *(lparam.0 as *mut HashMap<u32, String>) };
+    let visible = unsafe { IsWindowVisible(hwnd) }.as_bool();
+    // Owned windows (dialogs) and tool windows are not "app" windows.
+    let owned = unsafe { GetWindow(hwnd, GW_OWNER) }.is_ok_and(|o| !o.is_invalid());
+    let tool = unsafe { GetWindowLongPtrW(hwnd, GWL_EXSTYLE) } as u32 & WS_EX_TOOLWINDOW.0 != 0;
+    if visible && !owned && !tool {
+        let len = unsafe { GetWindowTextLengthW(hwnd) };
+        if len > 0 {
+            let mut buf = vec![0u16; len as usize + 1];
+            let n = unsafe { GetWindowTextW(hwnd, &mut buf) };
+            if n > 0 {
+                let mut pid = 0u32;
+                unsafe { GetWindowThreadProcessId(hwnd, Some(&mut pid)) };
+                titles
+                    .entry(pid)
+                    .or_insert_with(|| String::from_utf16_lossy(&buf[..n as usize]));
+            }
+        }
+    }
+    BOOL::from(true)
+}
+
+/// Title of the first visible, unowned, non-tool top-level window per PID.
+pub fn window_titles() -> HashMap<u32, String> {
+    let mut titles: HashMap<u32, String> = HashMap::new();
+    // SAFETY: the callback only dereferences `titles`, which outlives the call.
+    let _ = unsafe { EnumWindows(Some(collect_title), LPARAM(&mut titles as *mut _ as isize)) };
+    titles
+}
+
+/// Windows uses real window ownership (`window_titles`) instead.
+pub fn uses_gui_toolkit(_pid: u32) -> bool {
+    false
 }
 
 /// Suspend or resume every thread of `pid`.

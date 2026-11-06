@@ -14,7 +14,7 @@ import {
   CircleX,
   Disc,
 } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -27,7 +27,7 @@ import { formatBytes, formatNumber, formatPercent, formatRate } from '@/lib/form
 import type { ProcessInfo, ProcessSortKey } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useAppearance } from '@/stores/appearance';
-import { statusLabel } from './status';
+import { heat, statusLabel } from './status';
 import { isSuspended } from './useProcessActions';
 
 export interface Row {
@@ -55,13 +55,6 @@ function StatusGlyph({ status }: { status: string }) {
   if (status === 'zombie' || status === 'dead')
     return <CircleX className={cn(cls, 'text-danger')} strokeWidth={2.5} />;
   return <Circle className={cn(cls, 'text-faint')} />;
-}
-
-/** Greyscale "heat" behind numeric cells, like Task Manager but hue-free. */
-function heat(fraction: number): CSSProperties | undefined {
-  const f = Math.min(1, Math.max(0, fraction));
-  if (f < 0.02) return undefined;
-  return { backgroundColor: `color-mix(in srgb, var(--text) ${Math.round(4 + f * 30)}%, transparent)` };
 }
 
 const COLS: { key: ProcessSortKey; labelKey: TKey; align?: 'right'; width: string }[] = [

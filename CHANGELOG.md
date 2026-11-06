@@ -6,6 +6,21 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-06
+
+### Added
+
+- **Apps view in Processes**, like Task Manager. It lists the open applications,
+  each with all of its processes grouped, their total CPU, memory and disk use,
+  and the main window title on Windows.
+  - **End task** asks the app to close (`WM_CLOSE` on Windows, `SIGTERM` on
+    Linux) and ends it after 5 seconds if it does not respond.
+  - **Force end** closes it immediately.
+  - Rows expand to show the app's processes.
+  - Keyboard: Del to end task, Shift+Del to force end; there is also a context
+    menu.
+  - The Processes page opens on this view; List and Tree are unchanged.
+
 ### Fixed
 
 - Leaving the Processes page (or the dashboard) while it was still starting
@@ -93,6 +108,7 @@ All notable changes to this project are documented here. The format follows
 - CI for Linux and Windows; tag-triggered release workflow producing `.deb`,
   `.AppImage`, `.msi` and `.exe` installers.
 
-[Unreleased]: https://github.com/tfem1/pulse/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/tfem1/pulse/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/tfem1/pulse/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/tfem1/pulse/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/tfem1/pulse/releases/tag/v0.1.0

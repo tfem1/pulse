@@ -196,6 +196,31 @@ export const fr: Record<TKey, string> = {
   'processes.keyboardHint':
     '↑ ↓ sélection · Entrée détails · Suppr terminer · Maj+Suppr forcer l’arrêt · clic droit pour plus',
   'process.tableLabel': 'Processus',
+  'processes.apps': 'Applications',
+  'processes.appsView': 'Applications en cours',
+  'processes.appsSummary': 'Applications : {count} · processus : {total} · CPU total {cpu}',
+  'apps.tableLabel': 'Applications',
+  'apps.processes': 'Processus',
+  'apps.action': 'Action',
+  'apps.forceEnd': 'Forcer la fermeture',
+  'apps.closing': 'Fermeture…',
+  'apps.showProcesses': 'Afficher les processus',
+  'apps.none': 'Aucune application n’est ouverte.',
+  'apps.noneHint':
+    'Les programmes en arrière-plan et les services système sont dans les vues Liste et Arbre.',
+  'apps.keyboardHint':
+    '↑ ↓ sélection · → voir ses processus · Suppr terminer · Maj+Suppr forcer la fermeture · clic droit pour plus',
+  'apps.confirmEndTitle': 'Fermer « {name} » ?',
+  'apps.confirmEndBody':
+    'Pulse demande à {name} de se fermer, comme un clic sur sa croix. S’il est encore ouvert au bout de 5 secondes, il est arrêté. Le travail non enregistré peut être perdu.',
+  'apps.confirmForceTitle': 'Forcer la fermeture de « {name} » ?',
+  'apps.confirmForceBody':
+    '{name} et tous ses processus ({count}) seront arrêtés immédiatement. Le travail non enregistré sera perdu.',
+  'apps.closed': '{name} est fermé',
+  'apps.forcedAfterTimeout': '{name} ne répondait pas et a été arrêté',
+  'apps.forcedNow': '{name} a été arrêté',
+  'apps.partial': '{name} : certains processus n’ont pas pu être arrêtés ({count})',
+  'apps.failed': 'Impossible de fermer {name}',
   'process.name': 'Nom',
   'process.pid': 'PID',
   'process.user': 'Utilisateur',

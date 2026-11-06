@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use std::sync::atomic::Ordering;
 
 use pulse_core::alerts::{AlertEvent, RuleStatus};
+use pulse_core::apps;
 use pulse_core::config::Config;
 use pulse_core::export::{self, ExportFormat};
 use pulse_core::history::HistoryPoint;
@@ -62,6 +63,22 @@ pub fn set_process_streaming(state: State<'_, AppState>, enabled: bool) {
 #[tauri::command]
 pub fn kill_process(pid: u32, force: bool) -> CmdResult<()> {
     platform::kill_process(pid, force)
+}
+
+/// End a whole application (Apps view). `pids`: every process of the app,
+/// root first; `primary`: the window owners to ask to close first. Without
+/// `force`, survivors are terminated after a 5 s grace period.
+#[tauri::command]
+pub async fn end_app(
+    pids: Vec<u32>,
+    primary: Vec<u32>,
+    force: bool,
+) -> CmdResult<apps::EndAppOutcome> {
+    tauri::async_runtime::spawn_blocking(move || {
+        apps::end_app(&pids, &primary, force, apps::DEFAULT_GRACE)
+    })
+    .await
+    .map_err(|e| PulseError::Other(e.to_string()))?
 }
 
 #[tauri::command]

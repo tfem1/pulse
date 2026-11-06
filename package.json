@@ -1,7 +1,7 @@
 {
   "name": "pulse",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Fast, monochrome, cross-platform system monitor built with Tauri, Rust and React",
   "license": "MIT",
   "type": "module",

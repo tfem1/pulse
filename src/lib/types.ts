@@ -157,6 +157,17 @@ export interface ProcessInfo {
   exe: string | null;
   threads: number | null;
   isSystem: boolean;
+  /** User-facing application (owns a window / uses a GUI toolkit). */
+  gui: boolean;
+  /** Main window title, when known (Windows). */
+  title: string | null;
+}
+
+export interface EndAppOutcome {
+  ended: boolean;
+  forced: number;
+  failed: number[];
+  error: string | null;
 }
 
 export type Priority = 'idle' | 'belowNormal' | 'normal' | 'aboveNormal' | 'high' | 'realtime';

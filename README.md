@@ -84,22 +84,24 @@ Download the file for your system from the
 
 ## What you'll find in Pulse
 
-| Page            | What it shows                                                                                    |
-| --------------- | ------------------------------------------------------------------------------------------------ |
-| **Dashboard**   | Everything at a glance: processor, memory, disk, network, graphics card.                         |
-| **Performance** | Detailed graphs for the last minute, 5 minutes or 15 minutes.                                    |
-| **Processes**   | Every running program, with how much it uses. Search, sort, close, pause or slow down a program. |
-| **Storage**     | Space used on each disk, and the biggest folders.                                                |
-| **Network**     | Download and upload speed of each connection.                                                    |
-| **Sensors**     | Temperatures, fan speeds and voltages.                                                           |
-| **Alerts**      | Your warning rules, for example "notify me if memory goes above 90%".                            |
-| **Settings**    | Theme, language (English / French), refresh speed, notifications, data export.                   |
+| Page            | What it shows                                                                                                                                                                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Dashboard**   | Everything at a glance: processor, memory, disk, network, graphics card.                                                                                                                                                                   |
+| **Performance** | Detailed graphs for the last minute, 5 minutes or 15 minutes.                                                                                                                                                                              |
+| **Processes**   | Like Task Manager: the **Apps** view lists your open applications (all of an app's processes together) with an **End task** button; the **List** and **Tree** views show every process. Search, sort, close, pause or slow down a program. |
+| **Storage**     | Space used on each disk, and the biggest folders.                                                                                                                                                                                          |
+| **Network**     | Download and upload speed of each connection.                                                                                                                                                                                              |
+| **Sensors**     | Temperatures, fan speeds and voltages.                                                                                                                                                                                                     |
+| **Alerts**      | Your warning rules, for example "notify me if memory goes above 90%".                                                                                                                                                                      |
+| **Settings**    | Theme, language (English / French), refresh speed, notifications, data export.                                                                                                                                                             |
 
 **A few tips:**
 
-- In **Processes**, click a program, then **End task** to close it. **Force
-  kill** closes a program that is frozen. Right-click a program for more
-  options.
+- In **Processes → Apps**, click **End task** next to an application to close
+  it. Pulse asks it to close, as its own close button would, and ends it after
+  5 seconds if it doesn't respond. **Force end** closes it immediately, for
+  example when it is frozen. Right-click for more options. The **List** and
+  **Tree** views manage individual processes.
 - Click the **Pause** button in the top bar to freeze the graphs and read
   them at your own pace.
 - When you close the window, Pulse keeps running in the corner of the

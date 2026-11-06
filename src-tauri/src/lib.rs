@@ -70,6 +70,7 @@ pub fn run() {
             commands::get_processes,
             commands::set_process_streaming,
             commands::kill_process,
+            commands::end_app,
             commands::suspend_process,
             commands::resume_process,
             commands::set_process_priority,

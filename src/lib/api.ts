@@ -14,6 +14,7 @@ import type {
   AppPaths,
   Config,
   ConnectionSummary,
+  EndAppOutcome,
   ExportFormat,
   HistoryPoint,
   Priority,
@@ -35,6 +36,8 @@ export interface Backend {
   getProcesses(): Promise<ProcessInfo[]>;
   setProcessStreaming(enabled: boolean): Promise<void>;
   killProcess(pid: number, force: boolean): Promise<void>;
+  /** End a whole app: ask `primary` to close, terminate leftovers after 5 s (or at once with `force`). */
+  endApp(pids: number[], primary: number[], force: boolean): Promise<EndAppOutcome>;
   suspendProcess(pid: number): Promise<void>;
   resumeProcess(pid: number): Promise<void>;
   setProcessPriority(pid: number, priority: Priority): Promise<void>;
@@ -77,6 +80,8 @@ class TauriBackend implements Backend {
   getProcesses = () => invoke<ProcessInfo[]>('get_processes');
   setProcessStreaming = (enabled: boolean) => invoke<void>('set_process_streaming', { enabled });
   killProcess = (pid: number, force: boolean) => invoke<void>('kill_process', { pid, force });
+  endApp = (pids: number[], primary: number[], force: boolean) =>
+    invoke<EndAppOutcome>('end_app', { pids, primary, force });
   suspendProcess = (pid: number) => invoke<void>('suspend_process', { pid });
   resumeProcess = (pid: number) => invoke<void>('resume_process', { pid });
   setProcessPriority = (pid: number, priority: Priority) =>

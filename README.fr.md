@@ -84,22 +84,25 @@ Téléchargez le fichier de votre système sur la
 
 ## Ce que vous trouverez dans Pulse
 
-| Page                | Ce qu'elle montre                                                                                                        |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Tableau de bord** | Tout en un coup d'œil : processeur, mémoire, disque, réseau, carte graphique.                                            |
-| **Performances**    | Des graphiques détaillés sur la dernière minute, 5 minutes ou 15 minutes.                                                |
-| **Processus**       | Tous les programmes en cours et ce qu'ils consomment. Chercher, trier, fermer, mettre en pause ou ralentir un programme. |
-| **Stockage**        | L'espace utilisé sur chaque disque, et les plus gros dossiers.                                                           |
-| **Réseau**          | La vitesse de réception et d'envoi de chaque connexion.                                                                  |
-| **Capteurs**        | Températures, vitesse des ventilateurs et tensions.                                                                      |
-| **Alertes**         | Vos règles d'avertissement, par exemple « préviens-moi si la mémoire dépasse 90 % ».                                     |
-| **Paramètres**      | Thème, langue (français / anglais), vitesse de rafraîchissement, notifications, export des données.                      |
+| Page                | Ce qu'elle montre                                                                                                                                                                                                                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tableau de bord** | Tout en un coup d'œil : processeur, mémoire, disque, réseau, carte graphique.                                                                                                                                                                                                                           |
+| **Performances**    | Des graphiques détaillés sur la dernière minute, 5 minutes ou 15 minutes.                                                                                                                                                                                                                               |
+| **Processus**       | Comme le Gestionnaire des tâches : la vue **Applications** liste vos applications ouvertes (tous les processus d'une application regroupés) avec un bouton **Terminer** ; les vues **Liste** et **Arbre** montrent chaque processus. Chercher, trier, fermer, mettre en pause ou ralentir un programme. |
+| **Stockage**        | L'espace utilisé sur chaque disque, et les plus gros dossiers.                                                                                                                                                                                                                                          |
+| **Réseau**          | La vitesse de réception et d'envoi de chaque connexion.                                                                                                                                                                                                                                                 |
+| **Capteurs**        | Températures, vitesse des ventilateurs et tensions.                                                                                                                                                                                                                                                     |
+| **Alertes**         | Vos règles d'avertissement, par exemple « préviens-moi si la mémoire dépasse 90 % ».                                                                                                                                                                                                                    |
+| **Paramètres**      | Thème, langue (français / anglais), vitesse de rafraîchissement, notifications, export des données.                                                                                                                                                                                                     |
 
 **Quelques astuces :**
 
-- Dans **Processus**, cliquez sur un programme puis sur **Terminer** pour le
-  fermer. **Forcer l'arrêt** ferme un programme bloqué. Faites un clic droit sur
-  un programme pour plus d'options.
+- Dans **Processus → Applications**, cliquez sur **Terminer** à côté d'une
+  application pour la fermer. Pulse lui demande de se fermer, comme sa propre
+  croix, puis l'arrête au bout de 5 secondes si elle ne répond pas. **Forcer la
+  fermeture** la ferme immédiatement, par exemple si elle est bloquée. Faites un
+  clic droit pour plus d'options. Les vues **Liste** et **Arbre** gèrent chaque
+  processus.
 - Le bouton **Pause** de la barre du haut fige les graphiques pour les lire
   tranquillement.
 - Quand vous fermez la fenêtre, Pulse continue de tourner dans le coin de la

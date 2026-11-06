@@ -216,6 +216,11 @@ pub struct ProcessInfo {
     pub exe: Option<String>,
     pub threads: Option<usize>,
     pub is_system: bool,
+    /// A user-facing application: owns a window (Windows) or uses a GUI
+    /// toolkit (Linux). Drives the "Apps" view.
+    pub gui: bool,
+    /// Title of its main window, when known (Windows).
+    pub title: Option<String>,
 }
 
 /// Process scheduling priority, mapped to nice values on Unix and to

@@ -121,16 +121,19 @@ cargo clippy -p pulse-core --all-targets --target x86_64-pc-windows-msvc
 processes, users, components, and GPUs for non-NVIDIA cards). Everything else
 lives in `platform/`, behind one API in `platform/mod.rs`:
 
-| Function                             | Linux (`linux.rs`, `unix_proc.rs`)               | Windows (`windows.rs`)                                                                                        |
-| ------------------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| `kill_process(pid, force)`           | `SIGTERM` / `SIGKILL`                            | graceful: `WM_CLOSE` to the process's visible windows (like `taskkill` without `/F`), else `TerminateProcess` |
-| `suspend_process` / `resume_process` | `SIGSTOP` / `SIGCONT`                            | `SuspendThread` / `ResumeThread` on every thread (Toolhelp snapshot)                                          |
-| `set_priority` / `get_priority`      | `setpriority` (nice −20…19) / `/proc/<pid>/stat` | `SetPriorityClass` / `GetPriorityClass`                                                                       |
-| `memory_breakdown()`                 | `/proc/meminfo`                                  | `GetPerformanceInfo`                                                                                          |
-| `connections()`                      | `/proc/net/{tcp,tcp6,udp,udp6}`                  | `GetExtendedTcpTable` / `GetExtendedUdpTable` (with owning PID)                                               |
-| `SensorCollector`                    | `/sys/class/hwmon` (temp, fan, in, power, curr)  | WMI: `ROOT\LibreHardwareMonitor` → `ROOT\OpenHardwareMonitor` → `ROOT\WMI MSAcpi_ThermalZoneTemperature`      |
-| `is_virtual_interface`               | no `/sys/class/net/<if>/device` link             | name heuristics (vEthernet, Hyper-V, VPN, …)                                                                  |
-| `is_elevated`                        | `geteuid() == 0`                                 | token elevation                                                                                               |
+| Function                             | Linux (`linux.rs`, `unix_proc.rs`)                                                                    | Windows (`windows.rs`)                                                                                        |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `kill_process(pid, force)`           | `SIGTERM` / `SIGKILL`                                                                                 | graceful: `WM_CLOSE` to the process's visible windows (like `taskkill` without `/F`), else `TerminateProcess` |
+| `suspend_process` / `resume_process` | `SIGSTOP` / `SIGCONT`                                                                                 | `SuspendThread` / `ResumeThread` on every thread (Toolhelp snapshot)                                          |
+| `set_priority` / `get_priority`      | `setpriority` (nice −20…19) / `/proc/<pid>/stat`                                                      | `SetPriorityClass` / `GetPriorityClass`                                                                       |
+| `memory_breakdown()`                 | `/proc/meminfo`                                                                                       | `GetPerformanceInfo`                                                                                          |
+| `connections()`                      | `/proc/net/{tcp,tcp6,udp,udp6}`                                                                       | `GetExtendedTcpTable` / `GetExtendedUdpTable` (with owning PID)                                               |
+| `SensorCollector`                    | `/sys/class/hwmon` (temp, fan, in, power, curr)                                                       | WMI: `ROOT\LibreHardwareMonitor` → `ROOT\OpenHardwareMonitor` → `ROOT\WMI MSAcpi_ThermalZoneTemperature`      |
+| `is_virtual_interface`               | no `/sys/class/net/<if>/device` link                                                                  | name heuristics (vEthernet, Hyper-V, VPN, …)                                                                  |
+| `request_close` (app "End task")     | `SIGTERM`                                                                                             | `WM_CLOSE` to the process's visible windows                                                                   |
+| `is_running`                         | `/proc/<pid>/stat` state (zombies count as exited)                                                    | `GetExitCodeProcess == STILL_ACTIVE`                                                                          |
+| Apps detection                       | `uses_gui_toolkit`: libxcb / libX11 / libwayland-client mapped in `/proc/<pid>/maps` (cached per PID) | `window_titles`: visible, unowned, non-tool top-level windows (`EnumWindows`)                                 |
+| `is_elevated`                        | `geteuid() == 0`                                                                                      | token elevation                                                                                               |
 
 Modules are selected with `#[cfg(target_os = "linux")]` /
 `#[cfg(target_os = "windows")]`. `fallback.rs` keeps other targets compiling:
@@ -147,6 +150,16 @@ family is `None` at the snapshot level (`disks: None`). The UI renders
 `Unavailable` states rather than zeros. Missing NVIDIA drivers, missing hwmon,
 or an absent LibreHardwareMonitor are logged at `info` level and explained in
 the UI.
+
+**Apps view.** The sampler flags user-facing processes (`gui`, plus the window
+`title` on Windows). It excludes desktop-shell components and Pulse itself with
+its webview children; ownership doesn't matter, so an app started with sudo is
+still an app. `src/lib/apps.ts` groups them like Task Manager: each is traced up
+through ancestors running the same executable to the app's root, the app is that
+root plus its descendants, and an app started from another app is nested in it.
+`pulse_core::apps::end_app` ends an app: it asks the window owners to close,
+waits up to 5 s, then terminates the survivors. "Force end" terminates them at
+once.
 
 **Parsers are pure functions** with fixture tests: `parse_meminfo`,
 `parse_proc_net`, `parse_hwmon(root)` and `parse_stat_nice`.

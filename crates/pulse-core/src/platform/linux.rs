@@ -11,8 +11,25 @@ use crate::models::{
 };
 
 pub use super::unix_proc::{
-    get_priority, is_elevated, kill_process, resume_process, set_priority, suspend_process,
+    get_priority, is_elevated, is_running, kill_process, request_close, resume_process,
+    set_priority, suspend_process,
 };
+
+/// No portable window list on Linux (X11 vs Wayland): see `uses_gui_toolkit`.
+pub fn window_titles() -> HashMap<u32, String> {
+    HashMap::new()
+}
+
+/// A graphical application has a display-server client library mapped.
+pub fn uses_gui_toolkit(pid: u32) -> bool {
+    fs::read_to_string(format!("/proc/{pid}/maps")).is_ok_and(|maps| maps_has_gui_library(&maps))
+}
+
+pub(crate) fn maps_has_gui_library(maps: &str) -> bool {
+    ["libxcb.so", "libX11.so", "libwayland-client.so"]
+        .iter()
+        .any(|lib| maps.contains(lib))
+}
 
 // ---------------------------------------------------------------- memory ---
 
@@ -437,6 +454,18 @@ mod tests {
         let data = s.read();
         assert_eq!(data.readings.len(), 4);
         assert!(data.message.is_none());
+    }
+
+    #[test]
+    fn detects_gui_toolkits_in_maps() {
+        let gui = "7f00-7f10 r-xp 00000000 08:01 123 /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0\n";
+        let wl = "7f00-7f10 r-xp 00000000 08:01 123 /usr/lib/libwayland-client.so.0.22.0\n";
+        let cli = "7f00-7f10 r-xp 00000000 08:01 9 /usr/lib/x86_64-linux-gnu/libc.so.6\n";
+        assert!(maps_has_gui_library(gui));
+        assert!(maps_has_gui_library(wl));
+        assert!(!maps_has_gui_library(cli));
+        // This test binary has no GUI.
+        assert!(!uses_gui_toolkit(std::process::id()));
     }
 
     #[test]

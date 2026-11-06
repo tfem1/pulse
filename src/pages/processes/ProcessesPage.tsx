@@ -1,4 +1,4 @@
-import { CircleX, Gauge, Info, ListTree, Pause, Play, Rows3, Search, Skull } from 'lucide-react';
+import { AppWindow, CircleX, Gauge, Info, ListTree, Pause, Play, Rows3, Search, Skull } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -7,13 +7,16 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useT } from '@/i18n';
+import { groupApps, type AppGroup } from '@/lib/apps';
 import { formatNumber, formatPercent } from '@/lib/format';
 import type { ProcessInfo, ProcessSortKey } from '@/lib/types';
 import { useConfig } from '@/stores/config';
 import { useMetrics } from '@/stores/metrics';
 import { useProcesses } from '@/stores/processes';
 import { ProcessDetailsDialog } from './ProcessDetailsDialog';
+import { AppsTable } from './AppsTable';
 import { ProcessTable, type Row, type RowActions } from './ProcessTable';
+import { useAppActions } from './useAppActions';
 import { isSuspended, useProcessActions } from './useProcessActions';
 
 const STATUS_ORDER: Record<string, number> = {
@@ -77,12 +80,17 @@ export function ProcessesPage() {
   const [sortKey, setSortKey] = useState<ProcessSortKey>(cfg?.defaultSort ?? 'cpu');
   const [sortDesc, setSortDesc] = useState(cfg?.sortDescending ?? true);
   const [showSystem, setShowSystem] = useState(cfg?.showSystem ?? true);
-  const [tree, setTree] = useState(cfg?.treeView ?? false);
+  // Like Task Manager, open on the Apps view unless the tree is the user's default.
+  const [view, setView] = useState<'apps' | 'list' | 'tree'>(cfg?.treeView ? 'tree' : 'apps');
+  const tree = view === 'tree';
+  const [selectedApp, setSelectedApp] = useState<number | null>(null);
+  const [expandedApps, setExpandedApps] = useState<Set<number>>(new Set());
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
   const [selected, setSelected] = useState<number | null>(null);
   const [details, setDetails] = useState<ProcessInfo | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const { requestKill, suspend, resume, openPriority, dialogs } = useProcessActions();
+  const { requestEnd, closing, dialogs: appDialogs } = useAppActions();
 
   useEffect(() => {
     start();
@@ -135,6 +143,29 @@ export function ProcessesPage() {
     return out;
   }, [processes, sortKey, sortDesc, showSystem, query, tree, collapsed]);
 
+  const apps: AppGroup[] = useMemo(() => {
+    if (view !== 'apps') return [];
+    const q = query.trim().toLowerCase();
+    const list = groupApps(processes).filter(
+      (a) =>
+        !q ||
+        a.name.toLowerCase().includes(q) ||
+        (a.title ?? '').toLowerCase().includes(q) ||
+        a.processes.some((p) => matches(p, q)),
+    );
+    const dir = sortDesc ? -1 : 1;
+    const value = (a: AppGroup) =>
+      sortKey === 'cpu' ? a.cpu : sortKey === 'memory' ? a.memory : sortKey === 'disk' ? a.diskBps : null;
+    return list.sort((a, b) => {
+      const va = value(a);
+      const vb = value(b);
+      const r =
+        va != null && vb != null ? va - vb : a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+      return r * (va != null ? dir : 1) || a.id - b.id;
+    });
+  }, [view, processes, query, sortKey, sortDesc]);
+  const app = selectedApp != null ? (apps.find((a) => a.id === selectedApp) ?? null) : null;
+
   const selectedProc = selected != null ? (byPid.get(selected) ?? null) : null;
 
   const actions: RowActions = {
@@ -158,11 +189,19 @@ export function ProcessesPage() {
     <div className="flex h-full min-h-[480px] flex-col">
       <PageHeader
         title={t('processes.title')}
-        description={t('processes.summary', {
-          count: formatNumber(rows.length),
-          total: formatNumber(processes.length),
-          cpu: formatPercent(totalCpu),
-        })}
+        description={
+          view === 'apps'
+            ? t('processes.appsSummary', {
+                count: formatNumber(apps.length),
+                total: formatNumber(processes.length),
+                cpu: formatPercent(totalCpu),
+              })
+            : t('processes.summary', {
+                count: formatNumber(rows.length),
+                total: formatNumber(processes.length),
+                cpu: formatPercent(totalCpu),
+              })
+        }
       />
 
       <div className="mb-3 flex flex-wrap items-center gap-3">
@@ -178,11 +217,10 @@ export function ProcessesPage() {
             className="pl-8"
           />
         </div>
-        <ToggleGroup
-          type="single"
-          value={tree ? 'tree' : 'list'}
-          onValueChange={(v) => v && setTree(v === 'tree')}
-        >
+        <ToggleGroup type="single" value={view} onValueChange={(v) => v && setView(v as typeof view)}>
+          <ToggleGroupItem value="apps" aria-label={t('processes.appsView')}>
+            <AppWindow /> {t('processes.apps')}
+          </ToggleGroupItem>
           <ToggleGroupItem value="list" aria-label={t('processes.listView')}>
             <Rows3 /> {t('processes.list')}
           </ToggleGroupItem>
@@ -190,86 +228,138 @@ export function ProcessesPage() {
             <ListTree /> {t('processes.tree')}
           </ToggleGroupItem>
         </ToggleGroup>
-        <div className="flex items-center gap-2">
-          <Switch id="show-system" checked={showSystem} onCheckedChange={setShowSystem} />
-          <Label htmlFor="show-system" className="font-normal text-muted">
-            {t('processes.showSystem')}
-          </Label>
-        </div>
+        {view !== 'apps' && (
+          <div className="flex items-center gap-2">
+            <Switch id="show-system" checked={showSystem} onCheckedChange={setShowSystem} />
+            <Label htmlFor="show-system" className="font-normal text-muted">
+              {t('processes.showSystem')}
+            </Label>
+          </div>
+        )}
 
-        <div
-          className="ml-auto flex flex-wrap items-center gap-2"
-          aria-label={t('processes.selectionActions')}
-        >
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={!selectedProc}
-            onClick={() => selectedProc && actions.details(selectedProc)}
+        {view === 'apps' ? (
+          <div
+            className="ml-auto flex flex-wrap items-center gap-2"
+            aria-label={t('processes.selectionActions')}
           >
-            <Info /> {t('process.details')}
-          </Button>
-          {selectedProc && isSuspended(selectedProc) ? (
-            <Button variant="secondary" size="sm" onClick={() => actions.resume(selectedProc)}>
-              <Play /> {t('process.resume')}
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!app || closing.has(app.id)}
+              onClick={() => app && requestEnd(app, false)}
+            >
+              <CircleX /> {t('process.endTask')}
             </Button>
-          ) : (
+            <Button
+              variant="danger"
+              size="sm"
+              disabled={!app || closing.has(app.id)}
+              onClick={() => app && requestEnd(app, true)}
+            >
+              <Skull /> {t('apps.forceEnd')}
+            </Button>
+          </div>
+        ) : (
+          <div
+            className="ml-auto flex flex-wrap items-center gap-2"
+            aria-label={t('processes.selectionActions')}
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={!selectedProc}
+              onClick={() => selectedProc && actions.details(selectedProc)}
+            >
+              <Info /> {t('process.details')}
+            </Button>
+            {selectedProc && isSuspended(selectedProc) ? (
+              <Button variant="secondary" size="sm" onClick={() => actions.resume(selectedProc)}>
+                <Play /> {t('process.resume')}
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={!selectedProc}
+                onClick={() => selectedProc && actions.suspend(selectedProc)}
+              >
+                <Pause /> {t('process.suspend')}
+              </Button>
+            )}
             <Button
               variant="secondary"
               size="sm"
               disabled={!selectedProc}
-              onClick={() => selectedProc && actions.suspend(selectedProc)}
+              onClick={() => selectedProc && actions.priority(selectedProc)}
             >
-              <Pause /> {t('process.suspend')}
+              <Gauge /> {t('process.priority')}
             </Button>
-          )}
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!selectedProc}
-            onClick={() => selectedProc && actions.priority(selectedProc)}
-          >
-            <Gauge /> {t('process.priority')}
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!selectedProc}
-            onClick={() => selectedProc && actions.end(selectedProc)}
-          >
-            <CircleX /> {t('process.endTask')}
-          </Button>
-          <Button
-            variant="danger"
-            size="sm"
-            disabled={!selectedProc}
-            onClick={() => selectedProc && actions.kill(selectedProc)}
-          >
-            <Skull /> {t('process.forceKill')}
-          </Button>
-        </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!selectedProc}
+              onClick={() => selectedProc && actions.end(selectedProc)}
+            >
+              <CircleX /> {t('process.endTask')}
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              disabled={!selectedProc}
+              onClick={() => selectedProc && actions.kill(selectedProc)}
+            >
+              <Skull /> {t('process.forceKill')}
+            </Button>
+          </div>
+        )}
       </div>
 
-      <ProcessTable
-        rows={rows}
-        selected={selected}
-        onSelect={setSelected}
-        sortKey={sortKey}
-        sortDesc={sortDesc}
-        onSort={onSort}
-        onToggle={(pid) =>
-          setCollapsed((s) => {
-            const n = new Set(s);
-            if (n.has(pid)) n.delete(pid);
-            else n.add(pid);
-            return n;
-          })
-        }
-        actions={actions}
-        totalMemory={totalMemory}
-        loading={!loaded}
-      />
-      <p className="mt-2 text-xs text-faint">{t('processes.keyboardHint')}</p>
+      {view === 'apps' ? (
+        <AppsTable
+          apps={apps}
+          selected={selectedApp}
+          onSelect={setSelectedApp}
+          expanded={expandedApps}
+          onToggle={(id) =>
+            setExpandedApps((s) => {
+              const n = new Set(s);
+              if (n.has(id)) n.delete(id);
+              else n.add(id);
+              return n;
+            })
+          }
+          sortKey={sortKey}
+          sortDesc={sortDesc}
+          onSort={onSort}
+          onEnd={requestEnd}
+          closing={closing}
+          totalMemory={totalMemory}
+          loading={!loaded}
+        />
+      ) : (
+        <ProcessTable
+          rows={rows}
+          selected={selected}
+          onSelect={setSelected}
+          sortKey={sortKey}
+          sortDesc={sortDesc}
+          onSort={onSort}
+          onToggle={(pid) =>
+            setCollapsed((s) => {
+              const n = new Set(s);
+              if (n.has(pid)) n.delete(pid);
+              else n.add(pid);
+              return n;
+            })
+          }
+          actions={actions}
+          totalMemory={totalMemory}
+          loading={!loaded}
+        />
+      )}
+      <p className="mt-2 text-xs text-faint">
+        {view === 'apps' ? t('apps.keyboardHint') : t('processes.keyboardHint')}
+      </p>
 
       <ProcessDetailsDialog
         process={details ? (byPid.get(details.pid) ?? details) : null}
@@ -277,6 +367,7 @@ export function ProcessesPage() {
         onOpenChange={(o) => !o && setDetails(null)}
       />
       {dialogs}
+      {appDialogs}
     </div>
   );
 }

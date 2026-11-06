@@ -73,6 +73,8 @@ pub struct Sampler {
     users_refreshed: Instant,
     virtual_cache: HashMap<String, bool>,
     cached_sensors: Option<SensorData>,
+    /// pid -> (start time, uses a GUI toolkit): avoids re-reading /proc maps.
+    gui_cache: HashMap<u32, (u64, bool)>,
 }
 
 pub fn now_ms() -> u64 {
@@ -154,6 +156,7 @@ impl Sampler {
             users_refreshed: Instant::now(),
             virtual_cache: HashMap::new(),
             cached_sensors: None,
+            gui_cache: HashMap::new(),
         })
     }
 
@@ -558,7 +561,8 @@ impl Sampler {
         };
         let cores = self.logical_cores as f32;
 
-        self.sys
+        let mut list: Vec<ProcessInfo> = self
+            .sys
             .processes()
             .values()
             .filter(|p| p.thread_kind() != Some(ThreadKind::Userland))
@@ -605,9 +609,45 @@ impl Sampler {
                     cmd,
                     exe: p.exe().map(|e| e.to_string_lossy().into_owned()),
                     threads: p.tasks().map(|t| t.len()),
+                    gui: false,
+                    title: None,
                 }
             })
-            .collect()
+            .collect();
+        self.mark_apps(&mut list);
+        list
+    }
+
+    /// Flag the processes that are user-facing applications ("Apps" view):
+    /// they own a visible window (Windows) or have loaded a GUI toolkit
+    /// (Linux), excluding desktop-shell components and Pulse itself (with its
+    /// webview child processes). The owner does not matter: an app started
+    /// with sudo / "Run as administrator" is still an app.
+    fn mark_apps(&mut self, list: &mut [ProcessInfo]) {
+        let mut titles = platform::window_titles();
+        let self_pid = self.self_pid.as_u32();
+        let alive: HashSet<u32> = list.iter().map(|p| p.pid).collect();
+        self.gui_cache.retain(|pid, _| alive.contains(pid));
+        for p in list.iter_mut() {
+            if p.pid == self_pid
+                || p.parent == Some(self_pid)
+                || platform::is_desktop_component(&p.name)
+            {
+                continue;
+            }
+            p.title = titles.remove(&p.pid);
+            p.gui = p.title.is_some() || {
+                let (pid, start) = (p.pid, p.start_time);
+                match self.gui_cache.get(&pid) {
+                    Some(&(s, gui)) if s == start => gui,
+                    _ => {
+                        let gui = platform::uses_gui_toolkit(pid);
+                        self.gui_cache.insert(pid, (start, gui));
+                        gui
+                    }
+                }
+            };
+        }
     }
 }
 

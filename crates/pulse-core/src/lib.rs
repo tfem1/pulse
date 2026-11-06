@@ -9,6 +9,7 @@
 //! (`cargo check -p pulse-core --target x86_64-pc-windows-msvc`).
 
 pub mod alerts;
+pub mod apps;
 pub mod config;
 pub mod error;
 pub mod export;

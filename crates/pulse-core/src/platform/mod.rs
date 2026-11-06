@@ -134,6 +134,149 @@ pub fn is_elevated() -> bool {
     os::is_elevated()
 }
 
+/// Ask a process to close the way the user would: `WM_CLOSE` to its windows
+/// on Windows, `SIGTERM` on Unix. Returns `false` when there was nothing to
+/// ask (a Windows process without a visible window).
+pub fn request_close(pid: u32) -> Result<bool> {
+    guard(pid, "close")?;
+    os::request_close(pid)
+}
+
+/// Whether the process still exists (zombies count as exited).
+pub fn is_running(pid: u32) -> bool {
+    os::is_running(pid)
+}
+
+/// Title of each process's visible top-level window (Windows). Empty on
+/// other platforms, where window lists are not portable (X11 vs Wayland).
+pub fn window_titles() -> std::collections::HashMap<u32, String> {
+    os::window_titles()
+}
+
+/// Linux: the process has loaded a GUI toolkit (X11, XCB or Wayland client
+/// library), i.e. it is a graphical application. `false` elsewhere.
+pub fn uses_gui_toolkit(pid: u32) -> bool {
+    os::uses_gui_toolkit(pid)
+}
+
+/// Desktop-shell and session components that have windows or link GUI
+/// libraries but are not "apps" the user should end from an Apps list.
+pub fn is_desktop_component(name: &str) -> bool {
+    let n = name.to_ascii_lowercase();
+    #[cfg(windows)]
+    const EXACT: &[&str] = &[
+        "explorer.exe",
+        "dwm.exe",
+        "sihost.exe",
+        "ctfmon.exe",
+        "shellexperiencehost.exe",
+        "startmenuexperiencehost.exe",
+        "searchhost.exe",
+        "searchapp.exe",
+        "textinputhost.exe",
+        "lockapp.exe",
+        "applicationframehost.exe",
+        "widgets.exe",
+        "widgetservice.exe",
+        "systemsettingsbroker.exe",
+        "runtimebroker.exe",
+        "taskhostw.exe",
+        "csrss.exe",
+        "winlogon.exe",
+        "fontdrvhost.exe",
+        "shellhost.exe",
+    ];
+    #[cfg(not(windows))]
+    const EXACT: &[&str] = &[
+        "gnome-shell",
+        "plasmashell",
+        "kwin_wayland",
+        "kwin_x11",
+        "xwayland",
+        "xorg",
+        "mutter",
+        "cinnamon",
+        "xfwm4",
+        "xfce4-panel",
+        "xfdesktop",
+        "xfce4-session",
+        "xfsettingsd",
+        "lxpanel",
+        "lxsession",
+        "budgie-panel",
+        "budgie-wm",
+        "mate-panel",
+        "marco",
+        "caja-desktop",
+        "ksmserver",
+        "kded5",
+        "kded6",
+        "kaccess",
+        "krunner",
+        "xembedsniproxy",
+        "gmenudbusmenuproxy",
+        "polkit-kde-authentication-agent-1",
+        "nm-applet",
+        "blueman-applet",
+        "kdeconnectd",
+        "waybar",
+        "swaybg",
+        "sway",
+        "hyprland",
+        "mako",
+        "dunst",
+        "picom",
+        "polybar",
+        "i3bar",
+        "i3",
+        "bspwm",
+        "sxhkd",
+        "swayidle",
+        "swaylock",
+        "wl-paste",
+        "wl-copy",
+        "openbox",
+        "fluxbox",
+        "icewm",
+        "awesome",
+        "herbstluftwm",
+        "qtile",
+        "xmonad",
+        "enlightenment",
+        "compiz",
+        "metacity",
+        "fvwm",
+        "jwm",
+        "twm",
+        "labwc",
+        "wayfire",
+        "river",
+        "niri",
+        "weston",
+        "xvfb",
+        "xephyr",
+    ];
+    #[cfg(windows)]
+    const PREFIXES: &[&str] = &[];
+    #[cfg(not(windows))]
+    const PREFIXES: &[&str] = &[
+        "gsd-",
+        "xdg-desktop-portal",
+        "ibus-",
+        "at-spi",
+        "gnome-session",
+        "evolution-",
+        "polkit-gnome",
+        "org_kde_",
+        "tracker-",
+        "gvfs",
+        "goa-",
+        "xdg-",
+        "fcitx",
+    ];
+    EXACT.contains(&n.as_str()) || PREFIXES.iter().any(|p| n.starts_with(p))
+}
+
 /// Heuristic used by the "show system processes" filter.
 pub fn is_system_process(
     uid: Option<&sysinfo::Uid>,
@@ -206,6 +349,38 @@ mod tests {
             kill_process(std::process::id(), true),
             Err(PulseError::InvalidInput(_))
         ));
+    }
+
+    #[test]
+    fn desktop_components_are_not_apps() {
+        #[cfg(not(windows))]
+        {
+            assert!(is_desktop_component("gnome-shell"));
+            assert!(is_desktop_component("gsd-media-keys"));
+            assert!(!is_desktop_component("firefox"));
+        }
+        #[cfg(windows)]
+        {
+            assert!(is_desktop_component("explorer.exe"));
+            assert!(!is_desktop_component("chrome.exe"));
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn is_running_tracks_exit_and_zombies() {
+        let mut child = std::process::Command::new("sleep")
+            .arg("30")
+            .spawn()
+            .unwrap();
+        let pid = child.id();
+        assert!(is_running(pid));
+        kill_process(pid, true).unwrap();
+        // Not reaped yet (zombie): must already count as exited.
+        std::thread::sleep(std::time::Duration::from_millis(200));
+        assert!(!is_running(pid));
+        child.wait().unwrap();
+        assert!(!is_running(pid));
     }
 
     #[test]

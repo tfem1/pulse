@@ -9,8 +9,17 @@ use crate::models::{ConnectionSummary, MemoryBreakdown, SensorData};
 
 #[cfg(unix)]
 pub use super::unix_proc::{
-    get_priority, is_elevated, kill_process, resume_process, set_priority, suspend_process,
+    get_priority, is_elevated, is_running, kill_process, request_close, resume_process,
+    set_priority, suspend_process,
 };
+
+pub fn window_titles() -> std::collections::HashMap<u32, String> {
+    std::collections::HashMap::new()
+}
+
+pub fn uses_gui_toolkit(_pid: u32) -> bool {
+    false
+}
 
 #[cfg(not(unix))]
 mod no_proc {
@@ -36,6 +45,12 @@ mod no_proc {
         unsupported()
     }
     pub fn is_elevated() -> bool {
+        false
+    }
+    pub fn request_close(_: u32) -> Result<bool> {
+        unsupported()
+    }
+    pub fn is_running(_: u32) -> bool {
         false
     }
 }
