@@ -349,6 +349,26 @@ export interface AppInfo {
 
 export type ExportFormat = 'csv' | 'json';
 
+/** How this copy of Pulse was installed, which decides how it updates. */
+export type InstallMethod = 'windowsSetup' | 'windowsMsi' | 'appImage' | 'deb' | 'unsupported';
+
+export interface UpdateInfo {
+  current: string;
+  latest: string;
+  available: boolean;
+  releaseUrl: string;
+  publishedAt: string | null;
+  method: InstallMethod;
+  asset: { name: string; size: number; url: string; sha256: string | null } | null;
+  unsupportedReason: string | null;
+}
+
+export interface UpdateProgress {
+  phase: 'download' | 'install' | 'restart';
+  downloaded: number;
+  total: number;
+}
+
 /** Error shape produced by PulseError on the Rust side. */
 export interface BackendError {
   kind: 'permissionDenied' | 'notFound' | 'unsupported' | 'invalidInput' | 'io' | 'other';

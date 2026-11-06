@@ -15,7 +15,19 @@ log.workspace = true
 sysinfo = { version = "0.40", default-features = false, features = ["system", "disk", "network", "component", "user", "gpu"] }
 nvml-wrapper = "0.13"
 csv = "1.3"
+sha2 = "0.10"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
+
+# HTTPS client for the user-initiated update check / download (see update.rs).
+# Linux: rustls with the system certificate store. Windows: the OS's own TLS
+# (SChannel) and proxy settings.
+[target.'cfg(not(windows))'.dependencies]
+ureq = { version = "3.5", default-features = false, features = ["rustls", "platform-verifier"] }
+
+[target.'cfg(windows)'.dependencies.ureq]
+version = "3.5"
+default-features = false
+features = ["native-tls", "win-system-proxy"]
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

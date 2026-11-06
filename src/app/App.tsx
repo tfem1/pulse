@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { RouterProvider } from 'react-router';
 import { Toaster } from '@/components/Toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { useT } from '@/i18n';
+import { t, useT } from '@/i18n';
 import { getBackend } from '@/lib/api';
 import { errorMessage } from '@/lib/types';
 import { useAlerts } from '@/stores/alerts';
 import { historyCapacity, useConfig } from '@/stores/config';
 import { useMetrics } from '@/stores/metrics';
 import { toast } from '@/stores/toast';
+import { useUpdate } from '@/stores/update';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import { router } from './router';
 
@@ -48,6 +49,16 @@ export function App() {
         if (e.kind === 'fired') toast.warning(e.ruleName);
       });
       if (disposed) off();
+      // Opt-in start-up check: only tells the user, never installs by itself.
+      if (cfg.about.updateCheck) {
+        void useUpdate
+          .getState()
+          .check()
+          .then((info) => {
+            if (info?.available)
+              toast.info(t('about.updateAvailable', { version: info.latest }), t('about.updateWhere'));
+          });
+      }
     })().catch((e) => setError(errorMessage(e)));
     return () => {
       disposed = true;

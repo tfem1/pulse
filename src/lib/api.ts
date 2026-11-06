@@ -23,6 +23,8 @@ import type {
   ScanResult,
   Snapshot,
   SystemInfo,
+  UpdateInfo,
+  UpdateProgress,
 } from './types';
 
 export type Unlisten = UnlistenFn;
@@ -53,6 +55,11 @@ export interface Backend {
   getAlertStatus(): Promise<RuleStatus[]>;
   sendTestNotification(title: string, body: string): Promise<void>;
   getAppInfo(): Promise<AppInfo>;
+  /** Ask GitHub for the latest release (user-initiated or opt-in at start-up). */
+  checkUpdate(): Promise<UpdateInfo>;
+  /** Download, verify and install the latest release, then Pulse restarts. */
+  installUpdate(): Promise<void>;
+  onUpdateProgress(cb: (p: UpdateProgress) => void): Promise<Unlisten>;
   onSnapshot(cb: (s: Snapshot) => void): Promise<Unlisten>;
   onProcesses(cb: (p: ProcessInfo[]) => void): Promise<Unlisten>;
   onAlert(cb: (e: AlertEvent) => void): Promise<Unlisten>;
@@ -68,6 +75,7 @@ export const EVENTS = {
   processes: 'pulse://processes',
   alert: 'pulse://alert',
   fatal: 'pulse://fatal',
+  updateProgress: 'pulse://update-progress',
 } as const;
 
 class TauriBackend implements Backend {
@@ -99,6 +107,10 @@ class TauriBackend implements Backend {
   sendTestNotification = (title: string, body: string) =>
     invoke<void>('send_test_notification', { title, body });
   getAppInfo = () => invoke<AppInfo>('get_app_info');
+  checkUpdate = () => invoke<UpdateInfo>('check_update');
+  installUpdate = () => invoke<void>('install_update');
+  onUpdateProgress = (cb: (p: UpdateProgress) => void) =>
+    listen<UpdateProgress>(EVENTS.updateProgress, (e) => cb(e.payload));
 
   onSnapshot = (cb: (s: Snapshot) => void) => listen<Snapshot>(EVENTS.snapshot, (e) => cb(e.payload));
   onProcesses = (cb: (p: ProcessInfo[]) => void) =>

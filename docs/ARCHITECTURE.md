@@ -262,7 +262,19 @@ every interactive element (`:focus-visible` in `index.css`).
 - The capability file (`src-tauri/capabilities/default.json`) grants only core
   events and window APIs, notifications, the save/open dialogs, and opening URLs
   or revealing a file.
-- The CSP allows `connect-src` to `api.github.com` only for the opt-in update
-  check. There is no other network access and no telemetry.
+- The webview has no network access (`connect-src 'self' ipc:`). The only
+  network requests come from the Rust updater (`pulse-core/src/update.rs`),
+  and only when the user clicks _Check for updates_ or has enabled the
+  start-up check. There is no telemetry.
+- **Updater**: `check_update` asks the GitHub Releases API
+  (`PULSE_UPDATE_API` overrides the URL for tests) and picks the asset for the
+  detected installation (NSIS setup, MSI, AppImage or `.deb`; dev builds and
+  unknown layouts report why they cannot self-update). `install_update`
+  re-resolves the asset itself (the UI never supplies a URL), streams it to a
+  temporary file while emitting `pulse://update-progress`, verifies the
+  SHA-256 digest GitHub publishes, then installs it: atomic rename of the
+  AppImage, `pkexec apt-get install` for the `.deb`, or a detached script that
+  runs the silent Windows installer after Pulse exits. Pulse then quits and the
+  new version starts.
 - Process actions go through the guarded platform API; the UI confirms
   destructive actions by default.

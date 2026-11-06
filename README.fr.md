@@ -72,6 +72,16 @@ Téléchargez le fichier de votre système sur la
 - **Autres Linux :** le fichier `.AppImage` (clic droit → Propriétés → autoriser
   l'exécution, puis double-clic)
 
+### Mettre à jour
+
+Ouvrez _Paramètres → À propos_ et cliquez sur **Rechercher des mises à jour**.
+Si une nouvelle version existe, cliquez sur **Mettre à jour** : Pulse la
+télécharge, vérifie que le fichier est intact, l'installe et redémarre tout
+seul. Vos réglages sont conservés. (Avec le paquet `.deb`, votre mot de passe
+est demandé.)
+
+Vous pouvez aussi simplement relancer la commande d'installation.
+
 ### Désinstaller
 
 - **Linux :**
@@ -150,8 +160,10 @@ Non. Quand il tourne en arrière-plan, il utilise moins de 1 % d'un cœur du
 processeur et environ 100 Mo de mémoire.
 
 **Est-ce que Pulse envoie mes données quelque part ?**
-Non. Pulse ne se connecte jamais à internet. Seule exception : le bouton
-« Vérifier les mises à jour » dans _Paramètres → À propos_, désactivé par défaut.
+Non. Pulse ne se connecte jamais à internet de lui-même. Il contacte GitHub
+uniquement quand vous cliquez sur **Rechercher des mises à jour** dans
+_Paramètres → À propos_, ou au démarrage si vous activez la vérification
+automatique (désactivée par défaut).
 
 **Je ne vois pas l'icône de Pulse près de l'horloge (Linux).**
 Certains bureaux, comme GNOME (celui d'Ubuntu), ont besoin de l'extension

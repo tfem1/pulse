@@ -72,6 +72,15 @@ Download the file for your system from the
 - **Other Linux:** the `.AppImage` file (right-click → Properties → allow
   executing, then double-click)
 
+### Update
+
+Open _Settings → About_ and click **Check for updates**. If a new version is
+out, click **Update now**: Pulse downloads it, checks that the file is intact,
+installs it and restarts by itself. Your settings are kept. (With the `.deb`
+package, your password is asked for.)
+
+You can also just run the install command again.
+
 ### Uninstall
 
 - **Linux:**
@@ -145,8 +154,9 @@ No. When it runs in the background it uses less than 1% of one processor core
 and about 100 MB of memory.
 
 **Does Pulse send my data anywhere?**
-No. Pulse doesn't connect to the internet at all. The only exception is the
-"check for updates" button in _Settings → About_, which is off by default.
+No. Pulse doesn't connect to the internet on its own. It only contacts GitHub
+when you click **Check for updates** in _Settings → About_, or at start-up if
+you turn on the automatic check there (off by default).
 
 **I don't see the Pulse icon near the clock (Linux).**
 Some desktops, such as GNOME (default on Ubuntu), need the _AppIndicator_

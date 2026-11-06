@@ -518,11 +518,31 @@ export const fr: Record<TKey, string> = {
   'about.openFailed': 'Impossible d’ouvrir le lien',
   'about.updates': 'Mises à jour',
   'about.privacy':
-    'Pulse n’a aucune télémétrie et n’effectue aucune requête réseau, sauf si vous activez la vérification des mises à jour.',
-  'about.updateCheck': 'Vérifier les mises à jour',
-  'about.updateCheckHint':
-    'Interroge l’API GitHub Releases lorsque vous cliquez sur « Vérifier ». Désactivé par défaut.',
-  'about.checkNow': 'Vérifier',
+    'Pulse n’a aucune télémétrie. Il ne contacte GitHub que lorsque vous vérifiez les mises à jour, ou au démarrage si vous activez la vérification automatique.',
+  'about.currentVersion': 'Version installée : {version}',
+  'about.checkForUpdates': 'Rechercher des mises à jour',
+  'about.checking': 'Recherche…',
+  'about.updateSize': 'Téléchargement : {size} · publiée le {date}',
+  'about.updateNow': 'Mettre à jour',
+  'about.whatsNew': 'Nouveautés',
+  'about.openDownloads': 'Ouvrir la page de téléchargement',
+  'about.downloading': 'Téléchargement de Pulse {version}… {percent} %',
+  'about.installing': 'Installation…',
+  'about.installingDeb': 'Installation… saisissez votre mot de passe si le système le demande.',
+  'about.restarting': 'Redémarrage de Pulse…',
+  'about.updateFailed': 'La mise à jour n’a pas pu être installée',
+  'about.method.windowsSetup':
+    'L’installateur s’exécute en silence, puis Pulse redémarre sur la nouvelle version. Vos réglages sont conservés.',
+  'about.method.windowsMsi':
+    'Windows Installer met Pulse à jour, puis il redémarre sur la nouvelle version. Vos réglages sont conservés.',
+  'about.method.appImage':
+    'L’AppImage est remplacée sur place, puis Pulse redémarre sur la nouvelle version. Vos réglages sont conservés.',
+  'about.method.deb':
+    'Le paquet .deb est installé par le gestionnaire de paquets (il demande votre mot de passe), puis Pulse redémarre.',
+  'about.autoCheck': 'Rechercher les mises à jour au démarrage',
+  'about.autoCheckHint':
+    'Interroge GitHub une fois au démarrage et vous prévient si une nouvelle version existe. N’installe jamais rien tout seul. Désactivé par défaut.',
+  'about.updateWhere': 'Ouvrez Paramètres → À propos pour l’installer.',
   'about.upToDate': 'Pulse {version} est à jour',
   'about.updateAvailable': 'Pulse {version} est disponible',
   'about.noReleases': 'Aucune version n’a encore été publiée',

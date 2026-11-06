@@ -86,6 +86,8 @@ pub fn run() {
             commands::get_alert_status,
             commands::send_test_notification,
             commands::get_app_info,
+            commands::check_update,
+            commands::install_update,
         ])
         .build(tauri::generate_context!())
         .expect("error while building Pulse")

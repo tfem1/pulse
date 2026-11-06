@@ -525,10 +525,32 @@ export const en = {
   'about.releases': 'Releases',
   'about.openFailed': 'Could not open the link',
   'about.updates': 'Updates',
-  'about.privacy': 'Pulse has no telemetry and makes no network requests unless you enable the update check.',
-  'about.updateCheck': 'Check for updates',
-  'about.updateCheckHint': 'Queries the GitHub Releases API when you click “Check now”. Off by default.',
-  'about.checkNow': 'Check now',
+  'about.privacy':
+    'Pulse has no telemetry. It only contacts GitHub when you check for updates, or at start-up if you turn on the automatic check.',
+  'about.currentVersion': 'Installed version: {version}',
+  'about.checkForUpdates': 'Check for updates',
+  'about.checking': 'Checking…',
+  'about.updateSize': 'Download: {size} · published {date}',
+  'about.updateNow': 'Update now',
+  'about.whatsNew': 'What’s new',
+  'about.openDownloads': 'Open download page',
+  'about.downloading': 'Downloading Pulse {version}… {percent}%',
+  'about.installing': 'Installing…',
+  'about.installingDeb': 'Installing… enter your password if the system asks for it.',
+  'about.restarting': 'Restarting Pulse…',
+  'about.updateFailed': 'The update could not be installed',
+  'about.method.windowsSetup':
+    'The installer runs silently, then Pulse restarts on the new version. Your settings are kept.',
+  'about.method.windowsMsi':
+    'Windows Installer updates Pulse, then it restarts on the new version. Your settings are kept.',
+  'about.method.appImage':
+    'The AppImage is replaced in place, then Pulse restarts on the new version. Your settings are kept.',
+  'about.method.deb':
+    'The .deb package is installed with your system’s package manager (it asks for your password), then Pulse restarts.',
+  'about.autoCheck': 'Check for updates when Pulse starts',
+  'about.autoCheckHint':
+    'Asks GitHub once at start-up and tells you if a new version is out. Never installs anything by itself. Off by default.',
+  'about.updateWhere': 'Open Settings → About to install it.',
   'about.upToDate': 'Pulse {version} is up to date',
   'about.updateAvailable': 'Pulse {version} is available',
   'about.noReleases': 'No releases have been published yet',

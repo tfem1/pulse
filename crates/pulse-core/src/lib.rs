@@ -19,5 +19,6 @@ pub mod models;
 pub mod platform;
 pub mod sampler;
 pub mod storage;
+pub mod update;
 
 pub use error::{PulseError, Result};

@@ -6,6 +6,25 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-06
+
+### Added
+
+- **Update Pulse from the app.** _Settings → About → Check for updates_ looks
+  up the latest release on GitHub; **Update now** downloads it with a progress
+  bar, verifies its SHA-256 checksum, installs it and restarts Pulse on the new
+  version, keeping your settings. Works for the Windows installer (setup or
+  MSI), the AppImage and the `.deb` package (asks for your password).
+  Installations that cannot update themselves say why and link to the
+  download page.
+- Optional **check at start-up** (off by default): Pulse tells you when a new
+  version is out, and never installs anything on its own.
+
+### Changed
+
+- The update check now runs in the Rust backend; the interface itself no
+  longer has any network access.
+
 ## [0.2.0] - 2026-11-06
 
 ### Added
@@ -108,7 +127,8 @@ All notable changes to this project are documented here. The format follows
 - CI for Linux and Windows; tag-triggered release workflow producing `.deb`,
   `.AppImage`, `.msi` and `.exe` installers.
 
-[Unreleased]: https://github.com/tfem1/pulse/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/tfem1/pulse/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/tfem1/pulse/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/tfem1/pulse/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/tfem1/pulse/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/tfem1/pulse/releases/tag/v0.1.0

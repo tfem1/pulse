@@ -24,6 +24,8 @@ import type {
   SensorReading,
   Snapshot,
   SystemInfo,
+  UpdateInfo,
+  UpdateProgress,
 } from './types';
 
 const GiB = 1024 ** 3;
@@ -681,6 +683,35 @@ export class DemoBackend implements Backend {
       debug: true,
       trayAvailable: false,
     };
+  }
+  private updateCbs = new Set<(p: UpdateProgress) => void>();
+  async checkUpdate(): Promise<UpdateInfo> {
+    await new Promise((r) => setTimeout(r, 600));
+    return {
+      current: '0.1.0',
+      latest: '0.3.0',
+      available: true,
+      releaseUrl: 'https://github.com/tfem1/pulse/releases',
+      publishedAt: new Date(Date.now() - 86_400_000).toISOString(),
+      method: 'appImage',
+      asset: { name: 'Pulse_0.3.0_amd64.AppImage', size: 82_000_000, url: '', sha256: null },
+      unsupportedReason: null,
+    };
+  }
+  async installUpdate() {
+    const total = 82_000_000;
+    for (let done = 0; done <= total; done += total / 20) {
+      this.updateCbs.forEach((cb) => cb({ phase: 'download', downloaded: done, total }));
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    this.updateCbs.forEach((cb) => cb({ phase: 'install', downloaded: 0, total: 0 }));
+    await new Promise((r) => setTimeout(r, 500));
+    this.updateCbs.forEach((cb) => cb({ phase: 'restart', downloaded: 0, total: 0 }));
+    setTimeout(() => window.location.reload(), 1500);
+  }
+  async onUpdateProgress(cb: (p: UpdateProgress) => void): Promise<Unlisten> {
+    this.updateCbs.add(cb);
+    return () => this.updateCbs.delete(cb);
   }
   async onSnapshot(cb: (s: Snapshot) => void): Promise<Unlisten> {
     this.snapshotCbs.add(cb);

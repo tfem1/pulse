@@ -16,9 +16,10 @@ use pulse_core::models::{
     ConnectionSummary, Priority, ProcessInfo, ScanResult, Snapshot, SystemInfo,
 };
 use pulse_core::storage::{self, ScanLimits};
+use pulse_core::update;
 use pulse_core::{platform, PulseError};
 use serde::Serialize;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Emitter, State};
 use tauri_plugin_notification::NotificationExt;
 
 use crate::state::{AppState, WorkerMsg};
@@ -224,4 +225,85 @@ pub fn get_app_info(app: AppHandle, state: State<'_, AppState>) -> AppInfo {
         debug: cfg!(debug_assertions),
         tray_available: state.0.tray_available.load(Ordering::Relaxed),
     }
+}
+
+/// Look up the latest release on GitHub (user-initiated, or at start-up when
+/// the automatic check is enabled).
+#[tauri::command]
+pub async fn check_update(app: AppHandle) -> CmdResult<update::UpdateInfo> {
+    let version = app.package_info().version.to_string();
+    tauri::async_runtime::spawn_blocking(move || update::check(&version))
+        .await
+        .map_err(|e| PulseError::Other(e.to_string()))?
+}
+
+pub const EVENT_UPDATE_PROGRESS: &str = "pulse://update-progress";
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateProgress {
+    /// "download", "install" or "restart".
+    phase: &'static str,
+    downloaded: u64,
+    total: u64,
+}
+
+/// Download, verify and install the latest release, then quit so the new
+/// version starts. The asset is chosen here from the GitHub API, never from
+/// the UI. Progress is reported through `pulse://update-progress`.
+#[tauri::command]
+pub async fn install_update(app: AppHandle) -> CmdResult<()> {
+    let version = app.package_info().version.to_string();
+    let handle = app.clone();
+    tauri::async_runtime::spawn_blocking(move || -> CmdResult<()> {
+        let emit = |phase: &'static str, downloaded: u64, total: u64| {
+            let _ = handle.emit(
+                EVENT_UPDATE_PROGRESS,
+                UpdateProgress {
+                    phase,
+                    downloaded,
+                    total,
+                },
+            );
+        };
+        let install = update::detect_installation();
+        let info = update::check_with(&update::api_url(), &version, &install)?;
+        if !info.available {
+            return Err(PulseError::InvalidInput(format!(
+                "Pulse {version} is already the latest version"
+            )));
+        }
+        let asset = info.asset.ok_or_else(|| {
+            PulseError::Unsupported(
+                info.unsupported_reason
+                    .unwrap_or_else(|| "no package for this installation".into()),
+            )
+        })?;
+        let dir = std::env::temp_dir().join(format!("pulse-update-{}", info.latest));
+        std::fs::create_dir_all(&dir)?;
+        let file = dir.join(&asset.name);
+
+        let mut last = std::time::Instant::now();
+        emit("download", 0, asset.size);
+        update::download(&asset, &file, |done, total| {
+            if done == total || last.elapsed() >= std::time::Duration::from_millis(150) {
+                last = std::time::Instant::now();
+                emit("download", done, total);
+            }
+        })?;
+        emit("install", 0, 0);
+        update::apply(&install, &file)?;
+        emit("restart", 0, 0);
+        Ok(())
+    })
+    .await
+    .map_err(|e| PulseError::Other(e.to_string()))??;
+
+    // Leave the UI a moment to show "Restarting…", then quit: the new version
+    // starts once this process has exited.
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(800));
+        app.exit(0);
+    });
+    Ok(())
 }
